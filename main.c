@@ -1,3 +1,10 @@
+/* Copyright (c) 2016 Andrea Drius
+ * This file is under MIT License
+ *
+ * Read the LICENSE file for more information*/
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
