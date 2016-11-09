@@ -64,6 +64,9 @@ int main(int argc, char **argv)
 	fclose(fout);
 	fclose(finp);
 
+	ReleaseWaveData(&inp);
+	ReleaseWaveData(&out);
+
 	return EXIT_SUCCESS;
 }
 
