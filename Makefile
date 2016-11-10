@@ -1,2 +1,2 @@
 build:
-	gcc -o eq main.c wav.c -lm
+	gcc -o eq main.c wav.c -lm -O2
