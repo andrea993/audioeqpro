@@ -152,7 +152,7 @@ int pa__init(pa_module *m)
 		pa_proplist_sets(source_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
 		pa_proplist_sets(source_data.proplist, PA_PROP_DEVICE_CLASS, "filter");
 		ud->source=pa_source_new(m->core,&source_data,master->flags);
-		pa_source_new_data_done(&source_data); */
+		pa_source_new_data_done(&source_data); 
 	
 	
 	if(!ud->source)
@@ -161,6 +161,7 @@ int pa__init(pa_module *m)
 		goto fail;
 	}
 
+*/
 
 /* Create sync init*/
    pa_sink_new_data_init(&sink_data);
