@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <memory.h>
 
 #include "wav.h"
 
@@ -146,6 +147,7 @@ double filt(double u,double par[],double c[N][10],double x[N][M2])
 
 		for (i=0;i<M2;i++)
 			x[n][i]=xn[i];
+//		memcpy(x[n],xn,M2*sizeof(double));
 	}
 	return y;
 }
