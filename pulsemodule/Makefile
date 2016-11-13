@@ -1,12 +1,18 @@
 MOD_SO_OUT=module-test.so
+MOD_SO_OUT_DBG=module-test-dbg.so
 CC=gcc
 CFLAGS=-fPIC -shared -O2 -o $(MOD_SO_OUT)
 SRC=module-test.c
 
+dbg:CFLAGS=-fPIC -shared -g -DEQPRO_DEBUG -o $(MOD_SO_OUT_DBG)
 all:build
 
 build:
 	@echo " >>> (build) Compiling $(SRC)..."
+	$(CC) $(CFLAGS) $(SRC) && echo " >>> Done compiling $(SRC)" || echo " >>> Something went wrong while compiling $(SRC)"
+
+dbg:
+	@echo " >>> (build)(debug) Compiling $(SRC)..."
 	$(CC) $(CFLAGS) $(SRC) && echo " >>> Done compiling $(SRC)" || echo " >>> Something went wrong while compiling $(SRC)"
 
 install: PULSEVER:=$(shell sh pa_ver.sh )
