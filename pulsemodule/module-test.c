@@ -63,31 +63,106 @@ static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
 	pa_assert_se(u=(struct userdata*)s->userdata);
 
 	/*
-	 ...
-	 */
+		...
+		*/
 	return 0;
 }
 static void sink_update_requested_latency_cb(pa_sink *s)
 {
 	struct userdata *u;
-	
+
 	pa_log("sink_update_requested_latency_cb");
 	pa_sink_assert_ref(s);
 	pa_assert_se(u=(struct userdata*)s->userdata);
 
 	/*
-	 ...
-	 */
+		...
+		*/
 }
 
 static void sink_request_rewind_cb(pa_sink *s)
 {
 	struct userdata *u;
-	
+
 	pa_log("sink_request_rewind_cb");
 	pa_sink_assert_ref(s);
 	pa_assert_se(u=(struct userdata*)s->userdata);
 
+}
+
+static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chunk)
+{
+	pa_log("Callback: sink_input_pop_cb");
+}
+
+static void sink_input_process_rewind_cb(pa_sink_input* in_snk,size_t sz) 
+{
+	pa_log("Callback: sink_input_process_rewind_cb");
+}
+
+static void sink_input_update_max_rewind_cb(pa_sink_input* in_snk, size_t sz)
+{
+	pa_log("Callback: sink_input_update_max_rewind_cb");
+}
+
+static void sink_input_update_max_request_cb(pa_sink_input* in_snk, size_t sz)
+{
+	pa_log("Callback: sink_input_update_max_request_cb");
+}
+
+static void sink_input_update_sink_latency_range_cb(pa_sink_input* in_snk)
+{
+	pa_log("Callback: sink_input_update_sink_latency_range_cb");
+}
+
+static void sink_input_update_sink_fixed_latency_cb(pa_sink_input* in_snk)
+{
+	pa_log("Callback: sink_input_update_sink_fixed_latency_cb");
+}
+
+static void sink_input_kill_cb(pa_sink_input* in_snk) 
+{
+	pa_log("Callback: sink_input_kill_cb");
+}
+
+static void sink_input_attach_cb(pa_sink_input* in_snk)
+{
+	pa_log("Callback: sink_input_attach_cb");
+}
+
+static void sink_input_detach_cb(pa_sink_input* in_snk)
+{
+	pa_log("Callback: sink_input_detach_cb");
+}
+
+static void sink_input_state_change_cb(pa_sink_input* in_snk, pa_sink_input_state_t state)
+{
+	pa_log("Callback: sink_input_state_change_cb");
+}
+
+static bool sink_input_may_move_to_cb(pa_sink_input* in_snk, pa_sink* s)
+{
+	pa_log("Callback: sink_input_may_move_to_cb");
+}
+
+static void sink_input_moving_cb(pa_sink_input* in_snk_src, pa_sink* s_dest) 
+{
+	pa_log("Callback: sink_input_moving_cb");
+}
+
+static void use_volume_sharing(pa_sink_input* in_snk)
+{
+	pa_log("Callback: use_volume_sharing");
+}
+
+static void sink_input_volume_changed_cb(pa_sink_input* in_snk)
+{
+	pa_log("Callback: sink_input_volume_changed_cb");
+}
+
+static void sink_input_mute_changed_cb(pa_sink_input* in_snk)
+{
+	pa_log("Callback: sink_input_mute_changed_cb");
 }
 
 int pa__init(pa_module *m) 
@@ -103,7 +178,7 @@ int pa__init(pa_module *m)
 	unsigned sr;
 	char out[100];
 
-	
+
 	pa_log("its started");
 
 	if(!(ma=pa_modargs_new(m->argument,_valid_modargs)))
@@ -144,35 +219,35 @@ int pa__init(pa_module *m)
 
 	/* Create source */
 	/*pa_source_new_data_init(&source_data);
-		source_data.driver==__FILE__;
-		source_data.module=m;
-		source_data.name=pa_sprintf_malloc("%s.eqpro",master->name);
-		pa_source_new_data_set_sample_spec(&source_data,&master->sample_spec);
-		pa_source_new_data_set_channel_map(&source_data,&master->channel_map);
-		pa_proplist_sets(source_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
-		pa_proplist_sets(source_data.proplist, PA_PROP_DEVICE_CLASS, "filter");
-		ud->source=pa_source_new(m->core,&source_data,master->flags);
-		pa_source_new_data_done(&source_data); 
-	
-	
-	if(!ud->source)
-	{
-		pa_log("Failed to create source.");
-		goto fail;
-	}
+	  source_data.driver==__FILE__;
+	  source_data.module=m;
+	  source_data.name=pa_sprintf_malloc("%s.eqpro",master->name);
+	  pa_source_new_data_set_sample_spec(&source_data,&master->sample_spec);
+	  pa_source_new_data_set_channel_map(&source_data,&master->channel_map);
+	  pa_proplist_sets(source_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
+	  pa_proplist_sets(source_data.proplist, PA_PROP_DEVICE_CLASS, "filter");
+	  ud->source=pa_source_new(m->core,&source_data,master->flags);
+	  pa_source_new_data_done(&source_data); 
+
+
+	  if(!ud->source)
+	  {
+	  pa_log("Failed to create source.");
+	  goto fail;
+	  }
 
 */
 
-/* Create sync init*/
-   pa_sink_new_data_init(&sink_data);
-		sink_data.driver=__FILE__;
-		sink_data.module=m;
-		sink_data.name=pa_sprintf_malloc("%s.eqpro",master->name);
-		pa_sink_new_data_set_sample_spec(&sink_data,&master->sample_spec);
-		pa_sink_new_data_set_channel_map(&sink_data,&master->channel_map);
-		pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
-		pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_CLASS, "filter");
-		ud->sink=pa_sink_new(m->core,&sink_data,master->flags);
+	/* Create sync init*/
+	pa_sink_new_data_init(&sink_data);
+	sink_data.driver=__FILE__;
+	sink_data.module=m;
+	sink_data.name=pa_sprintf_malloc("%s.eqpro",master->name);
+	pa_sink_new_data_set_sample_spec(&sink_data,&master->sample_spec);
+	pa_sink_new_data_set_channel_map(&sink_data,&master->channel_map);
+	pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
+	pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_CLASS, "filter");
+	ud->sink=pa_sink_new(m->core,&sink_data,master->flags);
 	pa_sink_new_data_done(&sink_data);
 
 	if(!ud->sink)
@@ -187,15 +262,15 @@ int pa__init(pa_module *m)
 	ud->sink->update_requested_latency = sink_update_requested_latency_cb;
 	ud->sink->request_rewind = sink_request_rewind_cb;
 	/*TO DO ADD OTHERS CALLBACK AND MANAGE THE CALLBACK*/
-	
+
 	pa_sink_set_asyncmsgq(ud->sink, master->asyncmsgq);
-/* Create sync done*/
+	/* Create sync done*/
 
 
-/*Create sync input init*/
+	/*Create sync input init*/
 	pa_sink_input_new_data_init(&sink_input_data);
-		
-	
+
+
 	sink_input_data.driver = __FILE__;
 	sink_input_data.module = m;
 	pa_sink_input_new_data_set_sink(&sink_input_data, master,false);
@@ -206,10 +281,10 @@ int pa__init(pa_module *m)
 	pa_sink_input_new_data_set_channel_map(&sink_input_data, &master->channel_map);
 	pa_sink_input_new(&ud->sink_input, m->core, &sink_input_data);
 	pa_sink_input_new_data_done(&sink_input_data);
-	
+
 	if (!ud->sink_input)
-        goto fail;
-	
+		goto fail;
+
 	/*callback*/
 	ud->sink_input->pop=sink_input_pop_cb;
 	ud->sink_input->process_rewind = sink_input_process_rewind_cb;
@@ -223,17 +298,12 @@ int pa__init(pa_module *m)
 	ud->sink_input->state_change = sink_input_state_change_cb;
 	ud->sink_input->may_move_to = sink_input_may_move_to_cb;
 	ud->sink_input->moving = sink_input_moving_cb;
-	ud->sink_input->volume_changed = use_volume_sharing ? NULL : sink_input_volume_changed_cb;
+	ud->sink_input->volume_changed = *use_volume_sharing ? NULL : sink_input_volume_changed_cb;
 	ud->sink_input->mute_changed = sink_input_mute_changed_cb;
 	ud->sink_input->userdata = ud;
 
 	ud->sink->input_to_master = ud->sink_input;
-/*Create sync input done*/
-
-
-
-
-
+	/*Create sync input done*/
 
 
 	pa_sink_put(ud->sink);
