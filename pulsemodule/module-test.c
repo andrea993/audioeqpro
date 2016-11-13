@@ -415,13 +415,14 @@ int pa__init(pa_module *m)
 		goto fail;
 	}
 
+#ifdef EQPRO_DEBUG
 	sprintf(out,"%d",master->sample_spec.rate);
 	pa_log(out);
 	sprintf(out,"%d",master->sample_spec.channels);
 	pa_log(out);
 	sprintf(out,"%d",master->sample_spec.format);
 	pa_log(out);
-
+#endif
 	/* Create source */
 	/*pa_source_new_data_init(&source_data);
 	  source_data.driver==__FILE__;
@@ -442,8 +443,9 @@ int pa__init(pa_module *m)
 	  }
 
 */
-
-	/* Create sync init*/
+#ifdef EQPRO_DEBUG
+	pa_log("Create sink init");
+#endif	/* Create sync init*/
 	pa_sink_new_data_init(&sink_data);
 	sink_data.driver=__FILE__;
 	sink_data.module=m;
@@ -469,7 +471,10 @@ int pa__init(pa_module *m)
 	/*TO DO ADD OTHERS CALLBACK AND MANAGE THE CALLBACK*/
 
 	pa_sink_set_asyncmsgq(ud->sink, master->asyncmsgq);
-	/* Create sync done*/
+#ifdef EQPRO_DEBUG
+	pa_log("Create sink done");
+#endif
+/* Create sync done*/
 
 
 	/*Create sync input init*/
@@ -509,6 +514,9 @@ int pa__init(pa_module *m)
 
 	ud->sink->input_to_master = ud->sink_input;
 	/*Create sync input done*/
+#ifdef EQPRO_DEBUG
+	pa_log("Create sink input done");
+#endif
 
 
 	pa_sink_put(ud->sink);
@@ -526,7 +534,8 @@ fail:
 	pa__done(m);
 	return -1;
 
-}                                                                                                                                                                                              
+}
+
 void pa__done(pa_module *m) //TO DO: Free all resources
 {
 	struct userdata *ud;
@@ -534,7 +543,7 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 	pa_log("module-eqpro: its done");
 #endif
 
-	if(!(ud=m->userdata)) {
+	if(!(ud=(struct userdata*)m->userdata)) {
 #ifdef EQPRO_DEBUG
 		pa_log("(dbg)(pa__done) userdata is NULL, byebye ");
 #endif
@@ -557,26 +566,20 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 	/* Freeing resources */
 	int n,i;
 	for(n=0;n<ud->eqp.N;n++) {
-		if(ud->eqp.c[n])
-			pa_xfree(ud->eqp.c[n]);
+		pa_xfree(ud->eqp.c[n]);
 	}
 
-	if(ud->eqp.c)
-		pa_xfree(ud->eqp.c);
+	pa_xfree(ud->eqp.c);
 
 	for(n=0;n<ud->eqp.nch;n++) {
 		for(i=0;i<ud->eqp.N;i++) {
-			if(ud->eqp.X[n][i])
-				pa_xfree(ud->eqp.X[n][i]);
+			pa_xfree(ud->eqp.X[n][i]);
 		}
 		
-		if(ud->eqp.X[n]) 
-			pa_xfree(ud->eqp.X[n]);
+		pa_xfree(ud->eqp.X[n]);
 	}
 	
-	if(ud->eqp.X)
-		pa_xfree(ud->eqp.X);
+	pa_xfree(ud->eqp.X);
 
-	//ud will never be NULL as it is checked above
 	pa_xfree(ud);
 }
