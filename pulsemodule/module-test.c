@@ -536,7 +536,7 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 
 	if(!(ud=m->userdata)) {
 #ifdef EQPRO_DEBUG
-		pa_log("Error while setting struct userdata* (pa__done)");
+		pa_log("(dbg)(pa__done) userdata is NULL, byebye ");
 #endif
 		return;
 	}
@@ -573,7 +573,10 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 		if(ud->eqp.X[n]) 
 			pa_xfree(ud->eqp.X[n]);
 	}
-	pa_xfree(ud->eqp.X);
+	
+	if(ud->eqp.X)
+		pa_xfree(ud->eqp.X);
 
+	//ud will never be NULL as it is checked above
 	pa_xfree(ud);
 }
