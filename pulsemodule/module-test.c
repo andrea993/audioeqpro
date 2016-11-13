@@ -384,7 +384,7 @@ int pa__init(pa_module *m)
 	char out[100];
 
 #ifdef EQPRO_DEBUG
-	pa_log("its started");
+	pa_log("module-eqpro: its started");
 #endif
 	
 	if(!(ma=pa_modargs_new(m->argument,_valid_modargs)))
@@ -531,11 +531,49 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 {
 	struct userdata *ud;
 #ifdef EQPRO_DEBUG
-	pa_log("its done");
+	pa_log("module-eqpro: its done");
 #endif
-	if(ud=((struct userdata*)m->userdata))
-	{
-		
+
+	if(!(ud=m->userdata)) {
+#ifdef EQPRO_DEBUG
+		pa_log("Error while setting struct userdata* (pa__done)");
+#endif
+		return;
 	}
 
+	/* Releasing sinks and sink_inputs */
+	if(ud->sink) 
+		pa_sink_unlink(ud->sink);
+
+	if(ud->sink_input)
+		pa_sink_input_unlink(ud->sink_input);
+
+	if(ud->sink)
+		pa_sink_unref(ud->sink);
+
+	if(ud->sink_input)
+		pa_sink_input_unref(ud->sink_input);
+
+	/* Freeing resources */
+	int n,i;
+	for(n=0;n<ud->eqp.N;n++) {
+		if(ud->eqp.c[n])
+			pa_xfree(ud->eqp.c[n]);
+	}
+
+	if(ud->eqp.c)
+		pa_xfree(ud->eqp.c);
+
+	for(n=0;n<ud->eqp.nch;n++) {
+		for(i=0;i<ud->eqp.N;i++) {
+			if(ud->eqp.X[n][i])
+				pa_xfree(ud->eqp.X[n][i]);
+		}
+		
+		if(ud->eqp.X[n]) 
+			pa_xfree(ud->eqp.X[n]);
+	}
+	pa_xfree(ud->eqp.X);
+
+	pa_xfree(ud);
 }
