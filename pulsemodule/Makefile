@@ -1,7 +1,7 @@
 MOD_SO_OUT=module-test.so
 MOD_SO_OUT_DBG=module-test-dbg.so
 CC=gcc
-CFLAGS=-fPIC -shared -O2 -o $(MOD_SO_OUT)
+CFLAGS=-fPIC -shared -lm -O2 -o $(MOD_SO_OUT)
 SRC=module-test.c
 
 dbg:CFLAGS=-fPIC -shared -g -DEQPRO_DEBUG -o $(MOD_SO_OUT_DBG)
