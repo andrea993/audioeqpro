@@ -1,4 +1,43 @@
+MOD_SO_OUT=module-test.so
+CC=gcc
+CFLAGS=-fPIC -shared -O2 -o $(MOD_SO_OUT)
+SRC=module-test.c
+
+all:build
+
 build:
-	gcc -fPIC -shared -o module-test.so module-test.c
+	@echo " >>> (build) Compiling $(SRC)..."
+	$(CC) $(CFLAGS) $(SRC) && echo " >>> Done compiling $(SRC)" || echo " >>> Something went wrong while compiling $(SRC)"
+
+install: PULSEVER:=$(shell sh pa_ver.sh )
+install: MODULES_DIRECTORY=/usr/lib/pulse-$(PULSEVER)/modules/
 install:
-	sudo cp module-test.so /usr/lib/pulse-9.0/modules/
+	@echo " >>> (install) Checking requirements..."
+	if [[ $(PULSEVER) == "null-pulseaudio-version" ]]; then \
+		exit 2; \
+	fi
+	@echo " >>> (install) Pulseaudio version ... passed"
+	if [ ! -f $(MOD_SO_OUT) ]; then \
+		exit 1; \
+	fi
+	@echo " >>> (install) Module exists and found"
+	if [ ! -d $(MODULES_DIRECTORY) ]; then \
+		exit 3; \
+	fi
+	@echo " >>> (install) Modules directory exists and found"
+	@echo " --- "
+	@echo " >>> (install) Installing $(MOD_SO_OUT)"
+	@echo " >>> (install) PulseAudio version detected: $(PULSEVER)"
+	@echo " >>> (install) Modules directory found: $(MODULES_DIRECTORY)"
+	cp $(MOD_SO_OUT) $(MODULES_DIRECTORY) && echo " >>> Done installing module, now use pactl to load this module" || echo "Mmh... check if you are root :P" 
+
+clean:
+	@echo " >>> (clean) Removing $(MOD_SO_OUT)"
+	rm $(MOD_SO_OUT)
+
+.PHONY:
+	build, install, all, clean
+
+ifndef .VERBOSE
+.SILENT:
+endif
