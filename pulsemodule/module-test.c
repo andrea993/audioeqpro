@@ -72,7 +72,6 @@ static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t of
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_process_msg_cb");
 #endif
-	return 0;
 	return pa_sink_process_msg(o, code, data, offset, chunk);
 }
 static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
@@ -124,7 +123,7 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_pop_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 
 	return 0;
@@ -136,7 +135,7 @@ static void sink_input_process_rewind_cb(pa_sink_input* in_snk,size_t sz)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_process_rewind_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -146,7 +145,7 @@ static void sink_input_update_max_rewind_cb(pa_sink_input* in_snk, size_t sz)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_update_max_rewind_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -156,7 +155,7 @@ static void sink_input_update_max_request_cb(pa_sink_input* in_snk, size_t sz)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_update_max_request_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -166,7 +165,7 @@ static void sink_input_update_sink_latency_range_cb(pa_sink_input* in_snk)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_update_sink_latency_range_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -176,7 +175,7 @@ static void sink_input_update_sink_fixed_latency_cb(pa_sink_input* in_snk)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_update_sink_fixed_latency_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -186,7 +185,7 @@ static void sink_input_kill_cb(pa_sink_input* in_snk)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_kill_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -196,7 +195,7 @@ static void sink_input_attach_cb(pa_sink_input* in_snk)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_attach_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -206,7 +205,7 @@ static void sink_input_detach_cb(pa_sink_input* in_snk)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_detach_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -216,8 +215,14 @@ static void sink_input_state_change_cb(pa_sink_input* in_snk, pa_sink_input_stat
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_state_change_cb");
 #endif
-	pa_assert(in_snk);
+	/* Assertions */
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
+
+	if(PA_SINK_INPUT_IS_LINKED(state) && 
+			in_snk->thread_info.state == PA_SINK_INPUT_INIT) {
+		pa_sink_input_request_rewind(in_snk,0,false,true,true);
+	}
 }
 
 static bool sink_input_may_move_to_cb(pa_sink_input* in_snk, pa_sink* s)
@@ -226,7 +231,7 @@ static bool sink_input_may_move_to_cb(pa_sink_input* in_snk, pa_sink* s)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_may_move_to_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -236,7 +241,7 @@ static void sink_input_moving_cb(pa_sink_input* in_snk, pa_sink* s_dest)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_moving_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -246,7 +251,7 @@ static void use_volume_sharing(pa_sink_input* in_snk)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: use_volume_sharing");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 }
 
@@ -256,8 +261,10 @@ static void sink_input_volume_changed_cb(pa_sink_input* in_snk)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_volume_changed_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
+
+	pa_sink_volume_changed(ud->sink,&in_snk->volume);
 }
 
 static void sink_input_mute_changed_cb(pa_sink_input* in_snk)
@@ -266,8 +273,10 @@ static void sink_input_mute_changed_cb(pa_sink_input* in_snk)
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_mute_changed_cb");
 #endif
-	pa_assert(in_snk);
+	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
+
+	pa_sink_mute_changed(ud->sink,in_snk->muted);
 }
 
 
@@ -403,6 +412,7 @@ int pa__init(pa_module *m)
 		pa_log("Master sink not found");
 		goto fail;
 	}
+	pa_assert(m);
 	pa_assert(master);
 
 	ss=master->sample_spec;
@@ -526,6 +536,8 @@ fail:
 void pa__done(pa_module *m) //TO DO: Free all resources
 {
 	struct userdata *ud;
+	pa_assert(m);
+
 #ifdef EQPRO_DEBUG
 	pa_log("module-eqpro: its done");
 #endif
