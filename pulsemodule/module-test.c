@@ -72,6 +72,7 @@ static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t of
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_process_msg_cb");
 #endif
+   // return 0;
 	return pa_sink_process_msg(o, code, data, offset, chunk);
 }
 static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
@@ -385,6 +386,8 @@ void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, doub
 
 int pa__init(pa_module *m) 
 {
+    pa_assert(m);
+    
 	struct userdata *ud;
 	pa_modargs *ma;
 	pa_sink *master=NULL;
@@ -412,7 +415,6 @@ int pa__init(pa_module *m)
 		pa_log("Master sink not found");
 		goto fail;
 	}
-	pa_assert(m);
 	pa_assert(master);
 
 	ss=master->sample_spec;
@@ -535,8 +537,8 @@ fail:
 
 void pa__done(pa_module *m) //TO DO: Free all resources
 {
+    pa_assert(m);
 	struct userdata *ud;
-	pa_assert(m);
 
 #ifdef EQPRO_DEBUG
 	pa_log("module-eqpro: its done");
