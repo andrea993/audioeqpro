@@ -1,3 +1,4 @@
+#define __INCLUDED_FROM_PULSE_AUDIO
 #include "config.h"
 #include <pulsecore/module.h>
 #include <pulsecore/log.h>
@@ -7,6 +8,7 @@
 #include <pulsecore/sink.h>
 #include <pulsecore/source.h>
 #include <pulse/gccmacro.h>
+#include <pulse/def.h>
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -70,6 +72,7 @@ static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t of
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_process_msg_cb");
 #endif
+	return 0;
 	return pa_sink_process_msg(o, code, data, offset, chunk);
 }
 static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
@@ -77,6 +80,7 @@ static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
 	struct userdata *ud;
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_set_state_cb");
+	pa_log(pa_sprintf_malloc("%d",state));
 #endif
 	pa_sink_assert_ref(s);
 	pa_assert_se(ud=(struct userdata*)s->userdata);
@@ -377,12 +381,13 @@ int pa__init(pa_module *m)
 	pa_sink *master=NULL;
 	pa_sink_input_new_data sink_input_data;
 	pa_source_new_data source_data;
-	pa_sample_spec source_ss;
+	pa_sample_spec ss;
 	pa_sink_new_data sink_data;
 	double gaindb,f0;
 	unsigned sr;
 	char out[100];
-
+	bool use_volume_sharing = true;
+	bool force_flat_volume = false;
 #ifdef EQPRO_DEBUG
 	pa_log("module-eqpro: its started");
 #endif
@@ -400,7 +405,8 @@ int pa__init(pa_module *m)
 	}
 	pa_assert(master);
 
-	source_ss=master->sample_spec;
+	ss=master->sample_spec;
+	ss.format=PA_SAMPLE_FLOAT32;
 
 	ud=pa_xnew0(struct userdata,1);
 	ud->module=m;
@@ -423,26 +429,7 @@ int pa__init(pa_module *m)
 	sprintf(out,"%d",master->sample_spec.format);
 	pa_log(out);
 #endif
-	/* Create source */
-	/*pa_source_new_data_init(&source_data);
-	  source_data.driver==__FILE__;
-	  source_data.module=m;
-	  source_data.name=pa_sprintf_malloc("%s.eqpro",master->name);
-	  pa_source_new_data_set_sample_spec(&source_data,&master->sample_spec);
-	  pa_source_new_data_set_channel_map(&source_data,&master->channel_map);
-	  pa_proplist_sets(source_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
-	  pa_proplist_sets(source_data.proplist, PA_PROP_DEVICE_CLASS, "filter");
-	  ud->source=pa_source_new(m->core,&source_data,master->flags);
-	  pa_source_new_data_done(&source_data); 
 
-
-	  if(!ud->source)
-	  {
-	  pa_log("Failed to create source.");
-	  goto fail;
-	  }
-
-*/
 #ifdef EQPRO_DEBUG
 	pa_log("Create sink init");
 #endif	/* Create sync init*/
@@ -450,11 +437,11 @@ int pa__init(pa_module *m)
 	sink_data.driver=__FILE__;
 	sink_data.module=m;
 	sink_data.name=pa_sprintf_malloc("%s.eqpro",master->name);
-	pa_sink_new_data_set_sample_spec(&sink_data,&master->sample_spec);
+	pa_sink_new_data_set_sample_spec(&sink_data,&ss);
 	pa_sink_new_data_set_channel_map(&sink_data,&master->channel_map);
 	pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
 	pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_CLASS, "filter");
-	ud->sink=pa_sink_new(m->core,&sink_data,master->flags);
+	ud->sink=pa_sink_new(m->core,&sink_data,(master->flags & (PA_SINK_LATENCY|PA_SINK_DYNAMIC_LATENCY)) | (use_volume_sharing ? PA_SINK_SHARE_VOLUME_WITH_MASTER : 0));
 	pa_sink_new_data_done(&sink_data);
 
 	if(!ud->sink)
@@ -465,7 +452,7 @@ int pa__init(pa_module *m)
 
 	/* callbacks */
 	ud->sink->parent.process_msg=sink_process_msg_cb;
-	ud->sink->set_state = sink_set_state_cb;
+	//ud->sink->set_state = sink_set_state_cb;
 	ud->sink->update_requested_latency = sink_update_requested_latency_cb;
 	ud->sink->request_rewind = sink_request_rewind_cb;
 	/*TO DO ADD OTHERS CALLBACK AND MANAGE THE CALLBACK*/
@@ -487,7 +474,7 @@ int pa__init(pa_module *m)
 	sink_input_data.origin_sink = ud->sink;
 	pa_proplist_setf(sink_input_data.proplist, PA_PROP_MEDIA_NAME, "eqpro Sink Stream from %s", pa_proplist_gets(ud->sink->proplist, PA_PROP_DEVICE_DESCRIPTION));
 	pa_proplist_sets(sink_input_data.proplist, PA_PROP_MEDIA_ROLE, "filter");
-	pa_sink_input_new_data_set_sample_spec(&sink_input_data, &master->sample_spec);
+	pa_sink_input_new_data_set_sample_spec(&sink_input_data, &ss);
 	pa_sink_input_new_data_set_channel_map(&sink_input_data, &master->channel_map);
 	pa_sink_input_new(&ud->sink_input, m->core, &sink_input_data);
 	pa_sink_input_new_data_done(&sink_input_data);
@@ -508,7 +495,7 @@ int pa__init(pa_module *m)
 	ud->sink_input->state_change = sink_input_state_change_cb;
 	ud->sink_input->may_move_to = sink_input_may_move_to_cb;
 	ud->sink_input->moving = sink_input_moving_cb;
-	ud->sink_input->volume_changed = *use_volume_sharing ? NULL : sink_input_volume_changed_cb;
+	ud->sink_input->volume_changed = use_volume_sharing ? NULL : sink_input_volume_changed_cb;
 	ud->sink_input->mute_changed = sink_input_mute_changed_cb;
 	ud->sink_input->userdata = ud;
 
