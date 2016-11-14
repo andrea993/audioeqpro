@@ -3,3 +3,4 @@ chirp.wav_out.wav
 *.o
 *.so
 *.a
+*.user
