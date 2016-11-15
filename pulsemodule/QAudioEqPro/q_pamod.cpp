@@ -20,5 +20,11 @@ qpa::Q_PaModuleInfo qpa::loadModule(const QString& name, const QString& args)
     pa_context* pactx = pa_context_new("qaudioeqpro",mloop_api);
     int connect_rval = pa_context_connect(pactx,NULL,PA_CONTEXT_NOFLAGS,NULL);
 
+    if(pactx)
+        pa_context_unref(pactx);
+
+    if(mloop)
+        pa_mainloop_free(mloop);
+    
     return qpa::Q_PaModuleInfo("","",0,0,NULL); 
 }
