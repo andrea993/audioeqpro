@@ -1,7 +1,5 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
-#include <pulse/introspect.h>
-//doc: https://freedesktop.org/software/pulseaudio/doxygen/introspect_8h.html
 
 int main(int argc, char *argv[])
 {
