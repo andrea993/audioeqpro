@@ -13,7 +13,7 @@ qpa::Q_PaModuleInfo::Q_PaModuleInfo(const QString& name,
     nUsed(nUsed),proplist(proplist) 
 {}
 
-qpa::Q_PaModuleInfo loadModule(const QString& name, const QString& args)
+qpa::Q_PaModuleInfo qpa::loadModule(const QString& name, const QString& args)
 {
     pa_mainloop* mloop = pa_mainloop_new();
     pa_mainloop_api* mloop_api = pa_mainloop_get_api(mloop);
