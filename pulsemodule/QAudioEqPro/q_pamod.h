@@ -15,7 +15,7 @@ private:
     const char* str_err;
 };
 
-void loadModule(const QString& name,const QString& args);
+int loadModule(const QString& name,const QString& args);
 }
 
 #endif
