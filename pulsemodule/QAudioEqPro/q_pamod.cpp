@@ -80,7 +80,6 @@ clean:
 
     if(pamloop)
         pa_mainloop_free(pamloop);
-    return;
 }
 
 qpa::PulseAudioException::PulseAudioException(const char* strerr): str_err(strerr) {}
