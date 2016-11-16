@@ -2,19 +2,20 @@
 #define __Q_PAMOD
 
 #include<QString>
-#include<QtGlobal>
-#include<pulse/introspect.h>
+#include<exception>
 
-namespace qpa 
+namespace qpa
 {
-struct Q_PaModuleInfo 
+class PulseAudioException : public std::exception 
 {
-    Q_PaModuleInfo(const QString& name,const QString& args,const quint32& index,const quint32& nUsed,const pa_proplist* proplist);
-    const QString name,args;
-    const quint32 index,nUsed;
-    const pa_proplist* proplist;
+public:
+    explicit PulseAudioException(const char* strerr);
+    virtual const char* what() const throw();
+private:
+    const char* str_err;
 };
-Q_PaModuleInfo loadModule(const QString& name, const QString& args);
+
+void loadModule(const QString& name,const QString& args);
 }
 
 #endif

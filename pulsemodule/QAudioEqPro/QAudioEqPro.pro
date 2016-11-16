@@ -2,8 +2,15 @@ TEMPLATE = app
 
 QT += qml quick
 CONFIG += c++11
+LIBS += -lpulse
+QMAKE_CXXFLAGS = -Wall -Wextra
+QMAKE_CXXFLAGS_RELEASE = -O2
+QMAKE_CXXFLAGS_DEBUG = -g -Wshadow
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+           q_pamod.cpp
+
+HEADERS += q_pamod.h
 
 RESOURCES += qml.qrc
 
