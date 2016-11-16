@@ -4,3 +4,5 @@ chirp.wav_out.wav
 *.so
 *.a
 *.user
+.qmake.stash
+pulsemodule/QAudioEqPro/Makefile
