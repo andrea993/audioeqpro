@@ -4,11 +4,11 @@
 #include<pulse/context.h>
 #include<pulse/mainloop.h>
 #include<pulse/mainloop-api.h>
+
 #include<QDebug>
 
 #include<string>
 #include<cstring>
-#include<cstdio>
 
 #define __inline static inline
 
@@ -23,6 +23,12 @@ __inline void clean(pa_context* ctx, pa_mainloop* mloop)
 		pa_context_unref(ctx);
 	if(mloop)
 		pa_mainloop_free(mloop);
+}
+
+//cb idx
+static void idx_mod(pa_context* ctx, uint32_t idx, void* userdata)
+{
+
 }
 
 static void enable_mod(pa_context *ctx,void *userdata)
@@ -87,12 +93,10 @@ int qpa::loadModule(const QString& name,const QString& args)
     if(loopval < 0) {
         clean(pactx,pamloop);
         throw qpa::PulseAudioException("MainLoop exited with failure code");
-    } 
+    }
 
-
-	 clean(pactx,pamloop);
-
-     return 0;
+    clean(pactx,pamloop);
+    return 0;
 }
 
 qpa::PulseAudioException::PulseAudioException(const char* strerr): str_err(strerr)
