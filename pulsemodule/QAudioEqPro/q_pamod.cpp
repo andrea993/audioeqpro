@@ -25,36 +25,34 @@ __inline void clean(pa_context* ctx, pa_mainloop* mloop)
 		pa_mainloop_free(mloop);
 }
 
-//cb idx
-static void idx_mod(pa_context* ctx, uint32_t idx, void* userdata)
-{
-
-}
-
 static void enable_mod(pa_context *ctx,void *userdata)
 {
     pa_mainloop_api *api = (pa_mainloop_api*) userdata;
     pa_operation *paop=NULL;
+    pa_context_state_t state = pa_context_get_state(ctx);
 
-    switch(pa_context_get_state(ctx)) {
+    switch(state) {
+    case PA_CONTEXT_AUTHORIZING:
+    case PA_CONTEXT_CONNECTING:
+    case PA_CONTEXT_SETTING_NAME:
+    case PA_CONTEXT_UNCONNECTED:
+        break;
+
     case PA_CONTEXT_READY:
         paop=pa_context_load_module(ctx,g_name,g_args,NULL,NULL);
         if(paop)
             pa_operation_unref(paop);
         api->quit(api,0);
         break;
+
+    case PA_CONTEXT_TERMINATED: break;
     case PA_CONTEXT_FAILED:
         api->quit(api,-2);
         break;
-    case PA_CONTEXT_AUTHORIZING: break;
-    case PA_CONTEXT_CONNECTING: break;
-    case PA_CONTEXT_TERMINATED: break;
-    case PA_CONTEXT_UNCONNECTED: break;
-    case PA_CONTEXT_SETTING_NAME: break;
     }
 }
 
-int qpa::loadModule(const QString& name,const QString& args)
+bool qpa::loadModule(const QString& name,const QString& args)
 {
     pa_context* pactx = NULL;
     pa_mainloop* pamloop = NULL;
@@ -96,7 +94,7 @@ int qpa::loadModule(const QString& name,const QString& args)
     }
 
     clean(pactx,pamloop);
-    return 0;
+    return true;
 }
 
 qpa::PulseAudioException::PulseAudioException(const char* strerr): str_err(strerr)
