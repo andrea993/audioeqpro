@@ -7,6 +7,8 @@
 #include <pulsecore/core-util.h>
 #include <pulsecore/sink.h>
 #include <pulsecore/source.h>
+#include <pulsecore/memblock.h>
+#include <pulse/sample.h>
 #include <pulse/gccmacro.h>
 #include <pulse/def.h>
 
@@ -16,7 +18,6 @@
 
 #define M 2
 #define M2 4
-
 
 typedef struct __equalizerPar
 {
@@ -41,7 +42,6 @@ struct userdata
 	equalizerPar eqp;
 };
 
-
 static const char* const _valid_modargs[]=
 {
 	"gaindb",
@@ -57,14 +57,15 @@ static const char* const _valid_modargs[]=
 	NULL
 };
 
-
 void pa__done(pa_module *m);
+double eq_filt(double u, double par[], double **c, double **x, int N);
+void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, double oct);
+void eq_preproccesing(equalizerPar *eqp,double SR);
 
 
 PA_MODULE_AUTHOR("Andrea Drius");
 PA_MODULE_DESCRIPTION("equalizer");
 PA_MODULE_VERSION("v0.00.001-alpha");
-
 
 /* Called from I/O thread context */
 static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t offset, pa_memchunk *chunk)
@@ -120,12 +121,54 @@ static void sink_request_rewind_cb(pa_sink *s)
 static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chunk)
 {
 	struct userdata *ud;
+	pa_memchunk tchunk;
+	size_t fs,nsamp;
+	unsigned c;
+	float *src,*dst;
 
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_input_pop_cb");
 #endif
 	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
+
+	
+
+	/* Hmm, process any rewind request that might be queued up */
+	pa_sink_process_rewind(ud->sink, 0);
+
+/*	while(pa_memblockq_peek(ud->sink_input, &tchunk)<0)
+	{
+		
+	}*/
+	chunk->index=0;
+	chunk->length=sz;
+	chunk->memblock=pa_memblock_new(in_snk->sink->core->mempool,chunk->length);
+
+	pa_assert(tchunk.length > 0);
+	fs=pa_frame_size(&ud->sink->sample_spec);
+	nsamp=sz/fs;
+
+	/*read all buffer*/
+	pa_sink_render(ud->sink,sz,&tchunk);
+
+	src=(float*)((uint8_t*)pa_memblock_acquire(tchunk.memblock));
+	dst=(float*)pa_memblock_acquire(chunk->memblock);
+
+	while(nsamp>0)
+	{
+		for(c=0;c<ud->eqp.nch;c++)
+		{
+			*dst=(float)eq_filt(*src,ud->eqp.par,ud->eqp.c,ud->eqp.X[c],ud->eqp.N);
+			src++;
+			dst++;
+		}
+		nsamp--;
+	}
+
+	pa_memblock_release(tchunk.memblock);
+	pa_memblock_release(chunk->memblock);
+	pa_memblock_unref(tchunk.memblock);
 
 	return 0;
 }
@@ -352,7 +395,6 @@ double eq_filt(double u, double par[], double **c, double **x, int N)
 		xn[2]=x[n][0]*c[n][6]+xn2cn1-x[n][3]+u0*c[n][5];
 		xn[3]=x[n][0]*c[n][8]+u0*c[n][7];
 
-
 		for (i=0;i<M2;i++)
 			x[n][i]=xn[i];
 	}
@@ -400,6 +442,8 @@ int pa__init(pa_module *m)
 	char out[100];
 	bool use_volume_sharing = true;
 	bool force_flat_volume = false;
+	pa_memchunk silence;
+
 #ifdef EQPRO_DEBUG
 	pa_log("module-eqpro: its started");
 #endif
@@ -512,17 +556,25 @@ int pa__init(pa_module *m)
 	ud->sink_input->userdata = ud;
 
 	ud->sink->input_to_master = ud->sink_input;
+
+	pa_sink_input_get_silence(ud->sink_input,&silence);
+
+
 	/*Create sync input done*/
 #ifdef EQPRO_DEBUG
 	pa_log("Create sink input done");
 #endif
 
-
 	pa_sink_put(ud->sink);
 	pa_sink_input_put(ud->sink_input);
 
-
 	pa_modargs_free(ma);
+
+
+	//init equalizer
+	eq_init(&ud->eqp,12,30,2,44100,1);
+	eq_preproccesing(&ud->eqp,44100);
+
 
 	return 0;
 
