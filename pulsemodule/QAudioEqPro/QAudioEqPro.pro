@@ -10,7 +10,8 @@ QMAKE_CXXFLAGS_DEBUG = -g -Wshadow
 SOURCES += main.cpp \
            q_pamod.cpp
 
-HEADERS += q_pamod.h
+HEADERS += q_pamod.h \
+    signals.h
 
 RESOURCES += qml.qrc
 

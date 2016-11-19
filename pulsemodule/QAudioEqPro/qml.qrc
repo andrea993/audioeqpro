@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>loading_module.qml</file>
         <file>loading_module_failure.qml</file>
     </qresource>
 </RCC>
