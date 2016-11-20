@@ -10,4 +10,3 @@ pulsemodule/QAudioEqPro/QAudioEqPro
 qrc_qml.cpp
 qml_qrc.cpp
 moc_*.cpp
-QAudioEqPro
