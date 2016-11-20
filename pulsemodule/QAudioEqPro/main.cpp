@@ -3,13 +3,27 @@
 #include <QQmlComponent>
 #include <QQmlContext>
 #include <QDebug>
-#include <QObject>
+
+#ifdef __gnu_linux__
+#include <dlfcn.h>
+#else
+#error Your OS is not supported for now
+#endif //__gnu_linux__
 
 #include "q_pamod.h"
-//#include "signals.h"
+#include "q_pulseutil.h"
+#include "signals.h"
 
-#define MODULE_NAME "module-test"
+#define MODULE_NAME "module-equalizer-sink"
 #define MODULE_PARAMS ""
+
+/* SignalWrapper definitions */
+/* slot */
+void SignalWrapper::squit()
+{
+    quick_exit(0);
+}
+/* --- */
 
 QObject* createQmlCompo(QQmlEngine& engine, const QString &localFile)
 {
@@ -18,13 +32,27 @@ QObject* createQmlCompo(QQmlEngine& engine, const QString &localFile)
     return qml_compo.create();
 }
 
+void* checkAndLoadDl()
+{
+    QString modpath = qpa::util::getModulePath(MODULE_NAME);
+    if(modpath == PATH_DOES_NOT_EXIST)
+        return NULL;
+
+    return dlopen(modpath.toStdString().c_str(),RTLD_NOW);
+}
+
 int main(int argc, char *argv[])
 {
-    //SignalWrapper sigWrapper;
+    SignalWrapper sigWrapper;
 
     QGuiApplication app(argc,argv);
     QQmlEngine qml_engine;
 
+    /* quit() signal handler */
+    QObject::connect(&qml_engine,SIGNAL(quit())
+                     ,&sigWrapper,SLOT(squit()));
+
+    /* Load and check module from PA */
     try {
         qpa::loadModule(MODULE_NAME,MODULE_PARAMS);
     } catch(qpa::PulseAudioException pae) {
@@ -35,11 +63,19 @@ int main(int argc, char *argv[])
         quick_exit(1);
     }
 
+    void* so_handler;
+    if((so_handler=checkAndLoadDl()) == NULL) {
+        qWarning() << "dlopen failed:" << dlerror() << '\n';
+        quick_exit(1);
+    }
+
+    dlclose(so_handler);
+
     QObject* mainEqWindow = createQmlCompo(qml_engine,"main.qml");
 
     app.exec();
 
-    //bye
+    /* bye */
     delete mainEqWindow;
     return 0;
 }

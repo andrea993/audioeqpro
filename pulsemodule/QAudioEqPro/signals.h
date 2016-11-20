@@ -8,6 +8,8 @@ class SignalWrapper : public QObject
     Q_OBJECT
 signals:
     void closeNow();
+public slots:
+    void squit();
 };
 
 #endif // SIGNALS_H
