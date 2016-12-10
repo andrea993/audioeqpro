@@ -157,7 +157,7 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	nsamp=sz/fs;
 
 	/*read all buffer*/
-	pa_sink_render(ud->sink,sz,&tchunk);
+	pa_sink_render(ud->sink,sz,&tchunk); //bug, to fix use render full
 
 	src=(float*)((uint8_t*)pa_memblock_acquire(tchunk.memblock));
 	dst=(float*)pa_memblock_acquire(chunk->memblock);
