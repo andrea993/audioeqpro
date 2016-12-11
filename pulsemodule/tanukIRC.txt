@@ -1,0 +1,11 @@
+[22:53:00] <tanuk> Andrea993: Handling rewinds is a bit difficult. There are a few options.
+[22:53:15] <tanuk> There are two ways to handle rewinds correctly:
+[22:54:06] <tanuk> 1) Save the history of the filter state for every sample up to max_rewind.
+[22:56:11] <tanuk> 2) Save a few snapshots of the filter state, and when you get a rewind request for amount X, take the snapshot nearest to X samples in the history (round backwards in time) and replay the input audio as necessary until you get to exactly X.
+[22:56:59] --> marlinc (~marlinc@1.0.0.127.13.204.167.185.in-addr.arpa) has joined #pulseaudio
+[22:57:04] <tanuk> Another not-incorrect way would be to refuse to rewind. That means that you have to always configure pretty low latency so that volume changes and other events don't have too large delay.
+[22:58:19] <tanuk> Then there's the approach that the existing equalizer does: reset the filter to the initial state. That's not entirely correct, but kind of acceptable.
+[23:00:20] <Andrea993> I think that for me the (2) is the better solution. However for test purpose I want to try to run the equalizer without rewind. You said " refuse to rewind". How can I remove the rewind for this test? If I don't set rewind callback I get errors
+[23:00:32] <Andrea993> tanuk: 
+[23:00:50] <tanuk> You can set max_rewind to zero.
+[23:01:08] <Andrea993> I will try thanks a lot

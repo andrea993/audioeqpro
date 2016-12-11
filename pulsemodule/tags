@@ -1,0 +1,280 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+CANONICAL_HOST	config.h	17;"	d
+CC	Makefile	/^CC=gcc$/;"	m
+CFLAGS	Makefile	/^CFLAGS=-fPIC -shared -lm -O2 -o $(MOD_SO_OUT)$/;"	m
+CFLAGS	Makefile	/^dbg:CFLAGS=-lm -fPIC -shared -g -DEQPRO_DEBUG -o $(MOD_SO_OUT_DBG)$/;"	m
+DB	module-test.c	/^	double DB;$/;"	m	struct:__equalizerPar	file:
+ENABLE_LEGACY_DATABASE_ENTRY_FORMAT	config.h	31;"	d
+ENABLE_NLS	config.h	35;"	d
+GETGROUPS_T	config.h	39;"	d
+GETTEXT_PACKAGE	config.h	42;"	d
+HAVE_ACCEPT4	config.h	45;"	d
+HAVE_ALLOCA	config.h	48;"	d
+HAVE_ALLOCA_H	config.h	52;"	d
+HAVE_ALSA	config.h	55;"	d
+HAVE_ALSA_UCM	config.h	58;"	d
+HAVE_ARPA_INET_H	config.h	64;"	d
+HAVE_ATOMIC_BUILTINS	config.h	67;"	d
+HAVE_BLUEZ_5_NATIVE_HEADSET	config.h	73;"	d
+HAVE_BLUEZ_5_OFONO_HEADSET	config.h	76;"	d
+HAVE_BYTESWAP_H	config.h	79;"	d
+HAVE_CHMOD	config.h	90;"	d
+HAVE_CHOWN	config.h	93;"	d
+HAVE_CLOCK_GETTIME	config.h	96;"	d
+HAVE_CTIME_R	config.h	105;"	d
+HAVE_CXX11	config.h	108;"	d
+HAVE_DBUS	config.h	111;"	d
+HAVE_DBUS_WATCH_GET_UNIX_FD	config.h	114;"	d
+HAVE_DCGETTEXT	config.h	118;"	d
+HAVE_DECL_ENVIRON	config.h	122;"	d
+HAVE_DECL_SOUND_PCM_READ_BITS	config.h	126;"	d
+HAVE_DECL_SOUND_PCM_READ_CHANNELS	config.h	130;"	d
+HAVE_DECL_SOUND_PCM_READ_RATE	config.h	134;"	d
+HAVE_DLADDR	config.h	137;"	d
+HAVE_DLFCN_H	config.h	140;"	d
+HAVE_EXECINFO_H	config.h	143;"	d
+HAVE_FAST_64BIT_OPERATIONS	config.h	146;"	d
+HAVE_FCHMOD	config.h	149;"	d
+HAVE_FCHOWN	config.h	152;"	d
+HAVE_FORK	config.h	155;"	d
+HAVE_FSTAT	config.h	158;"	d
+HAVE_GETADDRINFO	config.h	167;"	d
+HAVE_GETGRGID_R	config.h	170;"	d
+HAVE_GETGRNAM_R	config.h	173;"	d
+HAVE_GETGROUPS	config.h	176;"	d
+HAVE_GETOPT_LONG	config.h	179;"	d
+HAVE_GETPWNAM_R	config.h	182;"	d
+HAVE_GETPWUID_R	config.h	185;"	d
+HAVE_GETTEXT	config.h	188;"	d
+HAVE_GETTIMEOFDAY	config.h	191;"	d
+HAVE_GETUID	config.h	194;"	d
+HAVE_GLIB	config.h	197;"	d
+HAVE_GLOB_H	config.h	200;"	d
+HAVE_GRP_H	config.h	203;"	d
+HAVE_GTK	config.h	206;"	d
+HAVE_HAL_COMPAT	config.h	209;"	d
+HAVE_ICONV	config.h	212;"	d
+HAVE_INTTYPES_H	config.h	215;"	d
+HAVE_IPV6	config.h	218;"	d
+HAVE_LANGINFO_H	config.h	221;"	d
+HAVE_LIBASYNCNS	config.h	224;"	d
+HAVE_LINUX_INPUT_H	config.h	239;"	d
+HAVE_LINUX_SOCKIOS_H	config.h	242;"	d
+HAVE_LOCALE_H	config.h	245;"	d
+HAVE_LRINTF	config.h	248;"	d
+HAVE_LSTAT	config.h	251;"	d
+HAVE_MEMFD	config.h	254;"	d
+HAVE_MEMORY_H	config.h	257;"	d
+HAVE_MKFIFO	config.h	260;"	d
+HAVE_MLOCK	config.h	263;"	d
+HAVE_NANOSLEEP	config.h	269;"	d
+HAVE_NETDB_H	config.h	275;"	d
+HAVE_NETINET_IN_H	config.h	278;"	d
+HAVE_NETINET_IN_SYSTM_H	config.h	281;"	d
+HAVE_NETINET_IP_H	config.h	284;"	d
+HAVE_NETINET_TCP_H	config.h	287;"	d
+HAVE_OPEN64	config.h	290;"	d
+HAVE_OPENSSL	config.h	293;"	d
+HAVE_ORC	config.h	296;"	d
+HAVE_OSS_OUTPUT	config.h	299;"	d
+HAVE_OSS_WRAPPER	config.h	302;"	d
+HAVE_PCREPOSIX_H	config.h	308;"	d
+HAVE_PIPE	config.h	311;"	d
+HAVE_PIPE2	config.h	314;"	d
+HAVE_POLL_H	config.h	317;"	d
+HAVE_POSIX_FADVISE	config.h	320;"	d
+HAVE_POSIX_MADVISE	config.h	323;"	d
+HAVE_POSIX_MEMALIGN	config.h	326;"	d
+HAVE_PPOLL	config.h	329;"	d
+HAVE_PTHREAD	config.h	332;"	d
+HAVE_PTHREAD_GETNAME_NP	config.h	335;"	d
+HAVE_PTHREAD_PRIO_INHERIT	config.h	338;"	d
+HAVE_PTHREAD_SETAFFINITY_NP	config.h	341;"	d
+HAVE_PTHREAD_SETNAME_NP	config.h	344;"	d
+HAVE_PWD_H	config.h	347;"	d
+HAVE_READLINK	config.h	350;"	d
+HAVE_REGEXEC	config.h	353;"	d
+HAVE_REGEX_H	config.h	356;"	d
+HAVE_SCHED_H	config.h	359;"	d
+HAVE_SETEGID	config.h	362;"	d
+HAVE_SETEUID	config.h	365;"	d
+HAVE_SETPGID	config.h	368;"	d
+HAVE_SETREGID	config.h	371;"	d
+HAVE_SETRESGID	config.h	374;"	d
+HAVE_SETRESUID	config.h	377;"	d
+HAVE_SETREUID	config.h	380;"	d
+HAVE_SETSID	config.h	383;"	d
+HAVE_SHM_OPEN	config.h	386;"	d
+HAVE_SIGACTION	config.h	392;"	d
+HAVE_SIGXCPU	config.h	395;"	d
+HAVE_SLEEP	config.h	401;"	d
+HAVE_SOXR	config.h	407;"	d
+HAVE_SPEEX	config.h	410;"	d
+HAVE_SSIZE_T	config.h	413;"	d
+HAVE_STDINT_H	config.h	416;"	d
+HAVE_STDLIB_H	config.h	419;"	d
+HAVE_STD_BOOL	config.h	422;"	d
+HAVE_STRERROR_R	config.h	425;"	d
+HAVE_STRINGS_H	config.h	428;"	d
+HAVE_STRING_H	config.h	431;"	d
+HAVE_STRSIGNAL	config.h	434;"	d
+HAVE_STRTOD_L	config.h	437;"	d
+HAVE_STRTOF	config.h	440;"	d
+HAVE_SYMLINK	config.h	443;"	d
+HAVE_SYSCONF	config.h	446;"	d
+HAVE_SYSLOG_H	config.h	449;"	d
+HAVE_SYSTEMD_DAEMON	config.h	452;"	d
+HAVE_SYSTEMD_JOURNAL	config.h	455;"	d
+HAVE_SYSTEMD_LOGIN	config.h	458;"	d
+HAVE_SYS_CAPABILITY_H	config.h	467;"	d
+HAVE_SYS_EVENTFD_H	config.h	473;"	d
+HAVE_SYS_IOCTL_H	config.h	479;"	d
+HAVE_SYS_MMAN_H	config.h	482;"	d
+HAVE_SYS_PRCTL_H	config.h	485;"	d
+HAVE_SYS_RESOURCE_H	config.h	488;"	d
+HAVE_SYS_SELECT_H	config.h	491;"	d
+HAVE_SYS_SOCKET_H	config.h	494;"	d
+HAVE_SYS_SOUNDCARD_H	config.h	497;"	d
+HAVE_SYS_STAT_H	config.h	500;"	d
+HAVE_SYS_SYSCALL_H	config.h	503;"	d
+HAVE_SYS_TYPES_H	config.h	506;"	d
+HAVE_SYS_UIO_H	config.h	509;"	d
+HAVE_SYS_UN_H	config.h	512;"	d
+HAVE_SYS_WAIT_H	config.h	515;"	d
+HAVE_TDB	config.h	518;"	d
+HAVE_UDEV	config.h	521;"	d
+HAVE_UNAME	config.h	524;"	d
+HAVE_UNISTD_H	config.h	527;"	d
+HAVE_USE_CASE_H	config.h	530;"	d
+HAVE_USLEEP	config.h	533;"	d
+HAVE_VALGRIND_MEMCHECK_H	config.h	536;"	d
+HAVE_VFORK	config.h	539;"	d
+HAVE_WORKING_FORK	config.h	554;"	d
+HAVE_WORKING_VFORK	config.h	557;"	d
+HAVE_X11	config.h	563;"	d
+HAVE_XLOCALE_H	config.h	566;"	d
+ICONV_CONST	config.h	569;"	d
+LT_OBJDIR	config.h	575;"	d
+M	module-test.c	19;"	d	file:
+M2	module-test.c	20;"	d	file:
+MODULES_DIRECTORY	Makefile	/^install: MODULES_DIRECTORY=\/usr\/lib\/pulse-$(PULSEVER)\/modules\/$/;"	m
+MODULE_NAME	QAudioEqPro/main.cpp	19;"	d	file:
+MODULE_PARAMS	QAudioEqPro/main.cpp	20;"	d	file:
+MOD_SO_OUT	Makefile	/^MOD_SO_OUT=$(MOD_SO_OUT_DBG)$/;"	m
+MOD_SO_OUT	Makefile	/^MOD_SO_OUT=module-test.so$/;"	m
+MOD_SO_OUT_DBG	Makefile	/^MOD_SO_OUT_DBG=module-test-dbg.so$/;"	m
+N	module-test.c	/^	int N;$/;"	m	struct:__equalizerPar	file:
+PACKAGE	config.h	584;"	d
+PACKAGE_BUGREPORT	config.h	587;"	d
+PACKAGE_NAME	config.h	590;"	d
+PACKAGE_STRING	config.h	593;"	d
+PACKAGE_TARNAME	config.h	596;"	d
+PACKAGE_URL	config.h	599;"	d
+PACKAGE_VERSION	config.h	602;"	d
+PACTL_BINARY	config.h	605;"	d
+PATH_DOES_NOT_EXIST	QAudioEqPro/q_pulseutil.h	6;"	d
+PA_ACCESS_GROUP	config.h	608;"	d
+PA_BINARY	config.h	611;"	d
+PA_CFLAGS	config.h	614;"	d
+PA_DEFAULT_CONFIG_DIR	config.h	617;"	d
+PA_DLSEARCHPATH	config.h	620;"	d
+PA_INCDIR	config.h	623;"	d
+PA_LIBDIR	config.h	626;"	d
+PA_MACHINE_ID	config.h	629;"	d
+PA_MACHINE_ID_FALLBACK	config.h	632;"	d
+PA_SOEXT	config.h	635;"	d
+PA_SYSTEM_CONFIG_PATH	config.h	638;"	d
+PA_SYSTEM_GROUP	config.h	641;"	d
+PA_SYSTEM_RUNTIME_PATH	config.h	644;"	d
+PA_SYSTEM_STATE_PATH	config.h	647;"	d
+PA_SYSTEM_USER	config.h	650;"	d
+PULSEVER	Makefile	/^install: PULSEVER:=$(shell sh pa_ver.sh )$/;"	m
+PulseAudioException	QAudioEqPro/q_pamod.cpp	/^qpa::PulseAudioException::PulseAudioException(const char* strerr): str_err(strerr)$/;"	f	class:qpa::PulseAudioException
+PulseAudioException	QAudioEqPro/q_pamod.h	/^class PulseAudioException : public std::exception $/;"	c	namespace:qpa
+Q_PULSEUTIL_H	QAudioEqPro/q_pulseutil.h	2;"	d
+R	module-test.c	/^	double R;$/;"	m	struct:__equalizerPar	file:
+SIGNALS_H	QAudioEqPro/signals.h	2;"	d
+SIZEOF_VOIDP	config.h	657;"	d
+SRC	Makefile	/^SRC=module-test.c$/;"	m
+STDC_HEADERS	config.h	668;"	d
+SUPPORT_TLS___THREAD	config.h	671;"	d
+SignalWrapper	QAudioEqPro/signals.h	/^class SignalWrapper : public QObject$/;"	c
+TLS	config.h	674;"	d
+USE_PER_USER_ESOUND_SOCKET	config.h	677;"	d
+VERSION	config.h	702;"	d
+WORDS_BIGENDIAN	config.h	711;"	d
+X	module-test.c	/^	double ***X;$/;"	m	struct:__equalizerPar	file:
+_ALL_SOURCE	config.h	681;"	d
+_DARWIN_USE_64_BIT_INODE	config.h	724;"	d
+_GNU_SOURCE	config.h	685;"	d
+_POSIX_PTHREAD_SEMANTICS	config.h	689;"	d
+_POSIX_PTHREAD_SEMANTICS	config.h	741;"	d
+_TANDEM_SOURCE	config.h	693;"	d
+__EXTENSIONS__	config.h	697;"	d
+__EXTENSIONS__	config.h	750;"	d
+__INCLUDED_FROM_PULSE_AUDIO	module-test.c	1;"	d	file:
+__Q_PAMOD	QAudioEqPro/q_pamod.h	2;"	d
+__equalizerPar	module-test.c	/^typedef struct __equalizerPar$/;"	s	file:
+__inline	QAudioEqPro/q_pamod.cpp	11;"	d	file:
+_valid_modargs	module-test.c	/^static const char* const _valid_modargs[]=$/;"	v	file:
+autoloaded	module-test.c	/^	bool autoloaded;$/;"	m	struct:userdata	file:
+c	module-test.c	/^	double **c;$/;"	m	struct:__equalizerPar	file:
+checkAndLoadDl	QAudioEqPro/main.cpp	/^void* checkAndLoadDl()$/;"	f
+clean	QAudioEqPro/q_pamod.cpp	/^__inline void clean(pa_context* ctx, pa_mainloop* mloop) $/;"	f
+core	module-test.c	/^	pa_core *core;$/;"	m	struct:userdata	file:
+createQmlCompo	QAudioEqPro/main.cpp	/^QObject* createQmlCompo(QQmlEngine& engine, const QString &localFile)$/;"	f
+enable_mod	QAudioEqPro/q_pamod.cpp	/^static void enable_mod(pa_context *ctx,void *userdata)$/;"	f	file:
+eq_filt	module-test.c	/^double eq_filt(double u, double par[], double **c, double **x, int N)$/;"	f
+eq_init	module-test.c	/^void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, double oct)$/;"	f
+eq_preproccesing	module-test.c	/^void eq_preproccesing(equalizerPar *eqp,double SR)$/;"	f
+eqp	module-test.c	/^	equalizerPar eqp;$/;"	m	struct:userdata	file:
+equalizerPar	module-test.c	/^}equalizerPar;$/;"	t	typeref:struct:__equalizerPar	file:
+f_min	module-test.c	/^	double f_min;$/;"	m	struct:__equalizerPar	file:
+fp	module-test.c	/^	FILE *fp;$/;"	m	struct:userdata	file:
+g_args	QAudioEqPro/q_pamod.cpp	/^static char g_args[256] = {0}; \/\/Module arguments$/;"	v	file:
+g_name	QAudioEqPro/q_pamod.cpp	/^static char g_name[256] = {0}; \/\/Module name$/;"	v	file:
+getFullPulseVersion	QAudioEqPro/q_pulseutil.cpp	/^QString qpa::util::getFullPulseVersion()$/;"	f	class:qpa::util
+getModuleDir	QAudioEqPro/q_pulseutil.cpp	/^QString qpa::util::getModuleDir()$/;"	f	class:qpa::util
+getModulePath	QAudioEqPro/q_pulseutil.cpp	/^QString qpa::util::getModulePath(const QString &modName)$/;"	f	class:qpa::util
+getPulseVersion	QAudioEqPro/q_pulseutil.cpp	/^QString qpa::util::getPulseVersion()$/;"	f	class:qpa::util
+loadModule	QAudioEqPro/q_pamod.cpp	/^bool qpa::loadModule(const QString& name,const QString& args)$/;"	f	class:qpa
+main	QAudioEqPro/main.cpp	/^int main(int argc, char *argv[])$/;"	f
+module	module-test.c	/^	pa_module *module;$/;"	m	struct:userdata	file:
+nch	module-test.c	/^	int nch;$/;"	m	struct:__equalizerPar	file:
+pa__done	module-test.c	/^void pa__done(pa_module *m) \/\/TO DO: Free all resources$/;"	f
+pa__init	module-test.c	/^int pa__init(pa_module *m) $/;"	f
+par	module-test.c	/^	double *par;$/;"	m	struct:__equalizerPar	file:
+qpa	QAudioEqPro/q_pamod.h	/^namespace qpa$/;"	n
+qpa	QAudioEqPro/q_pulseutil.h	/^namespace qpa {$/;"	n
+sink	module-test.c	/^	pa_sink* sink;$/;"	m	struct:userdata	file:
+sink_input	module-test.c	/^	pa_sink_input* sink_input;$/;"	m	struct:userdata	file:
+sink_input_attach_cb	module-test.c	/^static void sink_input_attach_cb(pa_sink_input* in_snk)$/;"	f	file:
+sink_input_detach_cb	module-test.c	/^static void sink_input_detach_cb(pa_sink_input* in_snk)$/;"	f	file:
+sink_input_kill_cb	module-test.c	/^static void sink_input_kill_cb(pa_sink_input* in_snk) $/;"	f	file:
+sink_input_may_move_to_cb	module-test.c	/^static bool sink_input_may_move_to_cb(pa_sink_input* in_snk, pa_sink* dest)$/;"	f	file:
+sink_input_moving_cb	module-test.c	/^static void sink_input_moving_cb(pa_sink_input* in_snk, pa_sink* dest) $/;"	f	file:
+sink_input_mute_changed_cb	module-test.c	/^static void sink_input_mute_changed_cb(pa_sink_input* in_snk)$/;"	f	file:
+sink_input_pop_cb	module-test.c	/^static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chunk)$/;"	f	file:
+sink_input_process_rewind_cb	module-test.c	/^static void sink_input_process_rewind_cb(pa_sink_input* in_snk,size_t sz) $/;"	f	file:
+sink_input_state_change_cb	module-test.c	/^static void sink_input_state_change_cb(pa_sink_input* in_snk, pa_sink_input_state_t state)$/;"	f	file:
+sink_input_update_max_request_cb	module-test.c	/^static void sink_input_update_max_request_cb(pa_sink_input* in_snk, size_t sz)$/;"	f	file:
+sink_input_update_max_rewind_cb	module-test.c	/^static void sink_input_update_max_rewind_cb(pa_sink_input* in_snk, size_t sz)$/;"	f	file:
+sink_input_update_sink_fixed_latency_cb	module-test.c	/^static void sink_input_update_sink_fixed_latency_cb(pa_sink_input* in_snk)$/;"	f	file:
+sink_input_update_sink_latency_range_cb	module-test.c	/^static void sink_input_update_sink_latency_range_cb(pa_sink_input* in_snk)$/;"	f	file:
+sink_input_volume_changed_cb	module-test.c	/^static void sink_input_volume_changed_cb(pa_sink_input* in_snk)$/;"	f	file:
+sink_process_msg_cb	module-test.c	/^static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t offset, pa_memchunk *chunk)$/;"	f	file:
+sink_request_rewind_cb	module-test.c	/^static void sink_request_rewind_cb(pa_sink *s)$/;"	f	file:
+sink_set_state_cb	module-test.c	/^static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)$/;"	f	file:
+sink_update_requested_latency_cb	module-test.c	/^static void sink_update_requested_latency_cb(pa_sink *s)$/;"	f	file:
+source	module-test.c	/^	pa_source *source;$/;"	m	struct:userdata	file:
+squit	QAudioEqPro/main.cpp	/^void SignalWrapper::squit()$/;"	f	class:SignalWrapper
+str_err	QAudioEqPro/q_pamod.h	/^    const char* str_err;$/;"	m	class:qpa::PulseAudioException
+use_volume_sharing	module-test.c	/^static void use_volume_sharing(pa_sink_input* in_snk)$/;"	f	file:
+userdata	module-test.c	/^struct userdata$/;"	s	file:
+util	QAudioEqPro/q_pulseutil.h	/^namespace util {$/;"	n	namespace:qpa
+what	QAudioEqPro/q_pamod.cpp	/^const char* qpa::PulseAudioException::what() const throw()$/;"	f	class:qpa::PulseAudioException
