@@ -73,7 +73,30 @@ static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t of
 #ifdef EQPRO_DEBUG
 	pa_log("Callback: sink_process_msg_cb");
 #endif
-   // return 0;
+   struct userdata *ud = (struct userdata*)PA_SINK(o)->userdata;
+   switch (code) {
+
+        case PA_SINK_MESSAGE_GET_LATENCY: {
+            //size_t fs=pa_frame_size(&u->sink->sample_spec);
+
+            /* The sink is _put() before the sink input is, so let's
+             * make sure we don't access it in that time. Also, the
+             * sink input is first shut down, the sink second. */
+            if (!PA_SINK_IS_LINKED(ud->sink->thread_info.state) ||
+                !PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state)) {
+                *((pa_usec_t*) data) = 0;
+                return 0;
+            }
+
+            *((pa_usec_t*) data)=
+					/* Get the latency of the master sink */
+					pa_sink_get_latency_within_thread(ud->sink_input->sink)+
+					/* Add the latency internal to our sink input on top */
+					pa_bytes_to_usec(pa_memblockq_get_length(ud->sink_input->thread_info.render_memblockq), &ud->sink_input->sink->sample_spec);;
+
+            return 0;
+        }
+    }
 	return pa_sink_process_msg(o, code, data, offset, chunk);
 }
 static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
@@ -86,6 +109,11 @@ static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
 	pa_sink_assert_ref(s);
 	pa_assert_se(ud=(struct userdata*)s->userdata);
 
+	if(!PA_SINK_IS_LINKED(state) ||
+			!PA_SINK_INPUT_IS_LINKED(pa_sink_input_get_state(ud->sink_input)))
+			return 0;
+
+	pa_sink_input_cork(ud->sink_input, state==PA_SINK_SUSPENDED);
 	return 0;
 }
 static void sink_update_requested_latency_cb(pa_sink *s)
@@ -154,10 +182,12 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 
 	pa_assert(tchunk.length > 0);
 	fs=pa_frame_size(&ud->sink->sample_spec);
-	nsamp=sz/fs;
 
 	/*read all buffer*/
-	pa_sink_render(ud->sink,sz,&tchunk); //bug, to fix use render full
+	pa_sink_render_full(ud->sink,sz,&tchunk); 
+	nsamp=tchunk.length/fs;
+
+	pa_log(pa_sprintf_malloc("samples: %d",nsamp));
 
 	src=(float*)((uint8_t*)pa_memblock_acquire(tchunk.memblock));
 	dst=(float*)pa_memblock_acquire(chunk->memblock);
@@ -166,7 +196,8 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	{
 		for(c=0;c<ud->eqp.nch;c++)
 		{
-			*dst=(float)eq_filt(*src,ud->eqp.par,ud->eqp.c,ud->eqp.X[c],ud->eqp.N);
+//			*dst=(float)eq_filt(*src,ud->eqp.par,ud->eqp.c,ud->eqp.X[c],ud->eqp.N);
+			*dst=0.1;
 			src++;
 			dst++;
 		}
