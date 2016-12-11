@@ -175,7 +175,7 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	
 
 	/* Hmm, process any rewind request that might be queued up */
-	//pa_sink_process_rewind(ud->sink, 0); no rewind
+	pa_sink_process_rewind(ud->sink, 0); //no rewind
 
 /*	while(pa_memblockq_peek(ud->sink_input, &tchunk)<0)
 	{
@@ -190,23 +190,26 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 
 	/*read all buffer*/
 	pa_sink_render_full(ud->sink,sz,&tchunk); 
-	nsamp=tchunk.length/fs;
+	nsamp=sz/fs;
 
 	pa_log(pa_sprintf_malloc("samples: %d",nsamp));
 
 	src=(float*)((uint8_t*)pa_memblock_acquire(tchunk.memblock));
 	dst=(float*)pa_memblock_acquire(chunk->memblock);
 
+
+	double foo_t=0;
 	while(nsamp>0)
 	{
 		for(c=0;c<ud->eqp.nch;c++)
 		{
 //			*dst=(float)eq_filt(*src,ud->eqp.par,ud->eqp.c,ud->eqp.X[c],ud->eqp.N);
-			*dst=0.1;
+			*dst=sin(2*M_PI*500*foo_t);
 			src++;
 			dst++;
 		}
 		nsamp--;
+		foo_t+=1/48000.0;
 	}
 
 	pa_memblock_release(tchunk.memblock);
@@ -251,7 +254,9 @@ static void sink_input_update_max_request_cb(pa_sink_input* in_snk, size_t sz)
 	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 	
-	pa_sink_set_max_request_within_thread(ud->sink, sz * pa_frame_size(&ud->sink->sample_spec) / pa_frame_size(&ud->sink_input->sample_spec));
+	//pa_sink_set_max_request_within_thread(ud->sink, sz * pa_frame_size(&ud->sink->sample_spec) / pa_frame_size(&ud->sink_input->sample_spec));
+	pa_sink_set_max_request_within_thread(ud->sink, 0); //no rewind
+
 }
 
 static void sink_input_update_sink_latency_range_cb(pa_sink_input* in_snk)
