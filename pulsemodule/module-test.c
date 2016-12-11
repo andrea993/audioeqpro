@@ -86,9 +86,6 @@ static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
 	pa_sink_assert_ref(s);
 	pa_assert_se(ud=(struct userdata*)s->userdata);
 
-	/*
-		...
-		*/
 	return 0;
 }
 static void sink_update_requested_latency_cb(pa_sink *s)
@@ -101,9 +98,11 @@ static void sink_update_requested_latency_cb(pa_sink *s)
 	pa_sink_assert_ref(s);
 	pa_assert_se(ud=(struct userdata*)s->userdata);
 
-	/*
-		...
-		*/
+	if(!PA_SINK_IS_LINKED(ud->sink->thread_info.state) || !PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state))
+		return;
+
+    /* Just hand this one over to the master sink */
+	pa_sink_input_set_requested_latency_within_thread(ud->sink_input,pa_sink_get_requested_latency_within_thread(s));
 }
 
 static void sink_request_rewind_cb(pa_sink *s)
@@ -116,6 +115,14 @@ static void sink_request_rewind_cb(pa_sink *s)
 	pa_sink_assert_ref(s);
 	pa_assert_se(ud=(struct userdata*)s->userdata);
 
+	
+	if (!PA_SINK_IS_LINKED(ud->sink->thread_info.state) ||	!PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state))
+	return;
+
+    /* Just hand this one over to the master sink */
+#ifdef EQPRO_DEBUG
+	pa_log("Do something?");
+#endif
 }
 
 static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chunk)
@@ -123,7 +130,7 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	struct userdata *ud;
 	pa_memchunk tchunk;
 	size_t fs,nsamp;
-	unsigned c;
+	int c;
 	float *src,*dst;
 
 #ifdef EQPRO_DEBUG
@@ -150,7 +157,7 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	nsamp=sz/fs;
 
 	/*read all buffer*/
-	pa_sink_render(ud->sink,sz,&tchunk);
+	pa_sink_render(ud->sink,sz,&tchunk); //bug, to fix use render full
 
 	src=(float*)((uint8_t*)pa_memblock_acquire(tchunk.memblock));
 	dst=(float*)pa_memblock_acquire(chunk->memblock);
@@ -423,6 +430,12 @@ void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, doub
 		for(n=0;n<eqp->N;n++)
 			eqp->X[i][n]=(double*)pa_xmalloc0(M2*sizeof(double));
 	}
+
+	eqp->par=(double*)pa_xmalloc0(eqp->N);
+	for(i=0;i<eqp->N;i++) //test
+		eqp->par[i]=-1;
+		
+
 		
 }
 
@@ -570,11 +583,9 @@ int pa__init(pa_module *m)
 
 	pa_modargs_free(ma);
 
-
 	//init equalizer
 	eq_init(&ud->eqp,12,30,2,44100,1);
 	eq_preproccesing(&ud->eqp,44100);
-
 
 	return 0;
 
@@ -615,6 +626,9 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 
 	if(ud->sink_input)
 		pa_sink_input_unref(ud->sink_input);
+
+	if(ud->eqp.par)
+		pa_xfree(ud->eqp.par);
 
 	/* Freeing resources */
 	int n,i;
