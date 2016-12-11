@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>loading_module.qml</file>
         <file>loading_module_failure.qml</file>
+        <file>general_error_dialog.qml</file>
     </qresource>
 </RCC>

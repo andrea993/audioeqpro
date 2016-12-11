@@ -5,8 +5,6 @@
 #include<pulse/mainloop.h>
 #include<pulse/mainloop-api.h>
 
-#include<QDebug>
-
 #include<string>
 #include<cstring>
 
