@@ -5,7 +5,8 @@ ModuleObject* ModuleObject::obj = nullptr;
 
 ModuleObject::~ModuleObject()
 {
-    dlclose(p_so_handler);
+    if(p_so_handler)
+        dlclose(p_so_handler);
     if(obj)
         delete obj;
 }
