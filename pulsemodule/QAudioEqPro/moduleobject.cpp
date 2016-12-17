@@ -10,7 +10,8 @@ ModuleObject::~ModuleObject()
         delete obj;
 }
 
-ModuleObject::ModuleObject()
+ModuleObject::ModuleObject() :
+    p_so_handler(nullptr)
 {}
 
 ModuleObject* ModuleObject::getInstance()
