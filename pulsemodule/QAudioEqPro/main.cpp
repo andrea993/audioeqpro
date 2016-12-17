@@ -4,6 +4,8 @@
 #include <QQmlContext>
 #include <QDebug>
 
+#include <cstring>
+
 #ifdef __gnu_linux__
 #include <dlfcn.h>
 #else
@@ -50,7 +52,7 @@ int main(int argc, char *argv[])
         qpa::loadModule(MODULE_NAME,MODULE_PARAMS);
     } catch(qpa::PulseAudioException pae) {
         QObject* loadingDialog = createQmlCompo(qml_engine,"loading_module_failure.qml");
-        qWarning(pae.what());
+        qWarning() << pae.what() << '\n';
         app.exec();
         delete loadingDialog;
         quick_exit(1);
@@ -58,7 +60,14 @@ int main(int argc, char *argv[])
 
     void* so_handler;
     if((so_handler=checkAndLoadDl()) == NULL) {
-        qWarning() << "dlopen failed:" << dlerror() << '\n';
+        char dlstrerr[256];
+        strncpy(dlstrerr,dlerror(),256);
+        qWarning() << "dlopen failed:" << dlstrerr << '\n';
+        QString fullstr("Error while dlopen() was executed: "+QString::fromUtf8(dlstrerr));
+        QObject* errorDialog = createQmlCompo(qml_engine,"general_error_dialog.qml");
+        errorDialog->findChild<QObject*>("editErrText")->setProperty("text",fullstr);
+        app.exec();
+        delete errorDialog;
         quick_exit(1);
     }
 
