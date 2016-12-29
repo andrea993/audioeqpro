@@ -14,18 +14,11 @@
 
 #include "q_pamod.h"
 #include "q_pulseutil.h"
-#include "signals.h"
+#include "qmlutils.h"
+#include "moduleobject.h"
 
 #define MODULE_NAME "module-equalizer-sink"
 #define MODULE_PARAMS ""
-
-/* SignalWrapper definitions */
-/* slot */
-void SignalWrapper::squit()
-{
-    quick_exit(0);
-}
-/* --- */
 
 QObject* createQmlCompo(QQmlEngine& engine, const QString &localFile)
 {
@@ -45,14 +38,14 @@ void* checkAndLoadDl()
 
 int main(int argc, char *argv[])
 {
-    SignalWrapper sigWrapper;
+    QmlUtils qmlutil;
 
     QGuiApplication app(argc,argv);
     QQmlEngine qml_engine;
 
     /* quit() signal handler */
     QObject::connect(&qml_engine,SIGNAL(quit())
-                     ,&sigWrapper,SLOT(squit()));
+                     ,&qmlutil,SLOT(squit()));
 
     /* Load and check module from PA */
     try {
@@ -78,8 +71,9 @@ int main(int argc, char *argv[])
         quick_exit(1);
     }
 
-    dlclose(so_handler);
+    ModuleObject::getInstance()->setObjectHandler(so_handler);
 
+    qml_engine.rootContext()->setContextProperty("utils",&qmlutil);
     QObject* mainEqWindow = createQmlCompo(qml_engine,"main.qml");
 
     app.exec();

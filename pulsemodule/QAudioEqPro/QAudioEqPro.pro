@@ -9,11 +9,14 @@ QMAKE_CXXFLAGS_DEBUG = -g -Wshadow
 
 SOURCES += main.cpp \
            q_pamod.cpp \
-    q_pulseutil.cpp
+    q_pulseutil.cpp \
+    qmlutils.cpp \
+    moduleobject.cpp
 
 HEADERS += q_pamod.h \
-    signals.h \
-    q_pulseutil.h
+    q_pulseutil.h \
+    qmlutils.h \
+    moduleobject.h
 
 RESOURCES += qml.qrc
 

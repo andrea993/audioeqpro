@@ -15,7 +15,7 @@ static char g_name[256] = {0}; //Module name
 static char g_args[256] = {0}; //Module arguments
 //DO NOT CHANGE VALUES//
 
-__inline void clean(pa_context* ctx, pa_mainloop* mloop) 
+__inline void clean(pa_context* ctx, pa_mainloop* mloop)
 {
 	if(ctx)
 		pa_context_unref(ctx);
