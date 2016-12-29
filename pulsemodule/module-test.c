@@ -551,7 +551,7 @@ int pa__init(pa_module *m)
 	double gaindb,f0;
 	unsigned sr;
 	char out[100];
-	bool use_volume_sharing = true;
+	bool use_volume_sharing = false; //true
 	bool force_flat_volume = false;
 	pa_memchunk silence;
 
