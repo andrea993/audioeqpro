@@ -42,6 +42,7 @@ Window {
         width: 640
         height: 25
         Text {
+            objectName: "welcomeTextObj"
             id: welcomeText
             text: "Welcome to QAudioEqPro!"
         }
