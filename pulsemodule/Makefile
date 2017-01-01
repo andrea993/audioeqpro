@@ -1,20 +1,30 @@
+MOD_OBJ_OUT=module-test.o
+MOD_OBJ_OUT_DBG=module-test-dbg.o
 MOD_SO_OUT=module-test.so
 MOD_SO_OUT_DBG=module-test-dbg.so
 CC=gcc
-CFLAGS=-fPIC -shared -lm -O2 -o $(MOD_SO_OUT)
+CFLAGS_LINKSTEP=-shared -lm -lpulse -o $(MOD_SO_OUT)
+CFLAGS=-Wall -Wextra -fPIC -O2 -c -o $(MOD_OBJ_OUT)
 SRC=module-test.c
 
-dbg:CFLAGS=-lm -fPIC -shared -g -DEQPRO_DEBUG -o $(MOD_SO_OUT_DBG)
+dbg:CFLAGS_LINKSTEP=-shared -lm -lpulse -o $(MOD_SO_OUT_DBG)
+dbg:CFLAGS=-Wall -Wextra -fPIC -g -c -DEQPRO_DEBUG -o $(MOD_OBJ_OUT_DBG)
 all:build
 
 build:
-	@echo " >>> (build) Compiling $(SRC)..."
-	$(CC) $(CFLAGS) $(SRC) && echo " >>> Done compiling $(SRC)" || echo " >>> Something went wrong while compiling $(SRC)"
-
+	@echo " >>> (build) Building object from: $(SRC)..."
+	$(CC) $(CFLAGS) $(SRC)  || exit 1
+	@echo " >>> (build) Linking..."
+	$(CC) $(CFLAGS_LINKSTEP) $(MOD_OBJ_OUT) || exit 2
+	@echo " >>> (build) Output: $(MOD_SO_OUT)"
+	@echo " >>> [DONE] Finished"
 dbg:
-	@echo " >>> (build)(debug) Compiling $(SRC)..."
-	$(CC) $(CFLAGS) $(SRC) && echo " >>> Done compiling $(SRC)" || echo " >>> Something went wrong while compiling $(SRC)"
-
+	@echo " >>> (build)(debug) Building object from: $(SRC)..."
+	$(CC) $(CFLAGS) $(SRC) || exit 1
+	@echo " >>> (build)(debug) Linking..."
+	$(CC) $(CFLAGS_LINKSTEP) $(MOD_OBJ_OUT) || exit 2
+	@echo " >>> (build)(debug) Output: $(MOD_SO_OUT_DBG)"
+	@echo " >>> [DONE] Finished"
 install:
 ifeq ($(INSTALL_DBG),1)
 MOD_SO_OUT=$(MOD_SO_OUT_DBG)
