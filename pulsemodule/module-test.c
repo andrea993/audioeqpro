@@ -11,6 +11,7 @@
 #include <pulse/sample.h>
 #include <pulse/gccmacro.h>
 #include <pulse/def.h>
+#include <pulse/xmalloc.h>
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -76,32 +77,32 @@ static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t of
 	pa_log("Callback: sink_process_msg_cb");
 	pa_log((pa_sprintf_malloc("message code: %d", code)));
 #endif
-   struct userdata *ud = (struct userdata*)PA_SINK(o)->userdata;
+	struct userdata *ud = (struct userdata*)PA_SINK(o)->userdata;
 
 
-   switch (code) {
+	switch (code) {
 
-        case PA_SINK_MESSAGE_GET_LATENCY: {
-            //size_t fs=pa_frame_size(&u->sink->sample_spec);
+	case PA_SINK_MESSAGE_GET_LATENCY: {
+		//size_t fs=pa_frame_size(&u->sink->sample_spec);
 
-            /* The sink is _put() before the sink input is, so let's
-             * make sure we don't access it in that time. Also, the
-             * sink input is first shut down, the sink second. */
-            if (!PA_SINK_IS_LINKED(ud->sink->thread_info.state) ||
-                !PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state)) {
-                *((pa_usec_t*) data) = 0;
-                return 0;
-            }
+		/* The sink is _put() before the sink input is, so let's
+		 * make sure we don't access it in that time. Also, the
+		 * sink input is first shut down, the sink second. */
+		if (!PA_SINK_IS_LINKED(ud->sink->thread_info.state) ||
+		    !PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state)) {
+			*((pa_usec_t*) data) = 0;
+			return 0;
+		}
 
-            *((pa_usec_t*) data)=
-					/* Get the latency of the master sink */
-					pa_sink_get_latency_within_thread(ud->sink_input->sink)+
-					/* Add the latency internal to our sink input on top */
-					pa_bytes_to_usec(pa_memblockq_get_length(ud->sink_input->thread_info.render_memblockq), &ud->sink_input->sink->sample_spec);;
+		*((pa_usec_t*) data)=
+			/* Get the latency of the master sink */
+			pa_sink_get_latency_within_thread(ud->sink_input->sink)+
+			/* Add the latency internal to our sink input on top */
+			pa_bytes_to_usec(pa_memblockq_get_length(ud->sink_input->thread_info.render_memblockq), &ud->sink_input->sink->sample_spec);;
 
-            return 0;
-        }
-    }
+		return 0;
+	}
+	}
 	return pa_sink_process_msg(o, code, data, offset, chunk);
 }
 static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
@@ -115,8 +116,8 @@ static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state)
 	pa_assert_se(ud=(struct userdata*)s->userdata);
 
 	if(!PA_SINK_IS_LINKED(state) ||
-			!PA_SINK_INPUT_IS_LINKED(pa_sink_input_get_state(ud->sink_input)))
-			return 0;
+	   !PA_SINK_INPUT_IS_LINKED(pa_sink_input_get_state(ud->sink_input)))
+		return 0;
 
 	pa_sink_input_cork(ud->sink_input, state==PA_SINK_SUSPENDED);
 	return 0;
@@ -134,7 +135,7 @@ static void sink_update_requested_latency_cb(pa_sink *s)
 	if(!PA_SINK_IS_LINKED(ud->sink->thread_info.state) || !PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state))
 		return;
 
-    /* Just hand this one over to the master sink */
+	/* Just hand this one over to the master sink */
 	pa_sink_input_set_requested_latency_within_thread(ud->sink_input,pa_sink_get_requested_latency_within_thread(s));
 }
 
@@ -148,11 +149,11 @@ static void sink_request_rewind_cb(pa_sink *s)
 	pa_sink_assert_ref(s);
 	pa_assert_se(ud=(struct userdata*)s->userdata);
 
-	
-	if (!PA_SINK_IS_LINKED(ud->sink->thread_info.state) ||	!PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state))
-	return;
 
-    /* Just hand this one over to the master sink */
+	if (!PA_SINK_IS_LINKED(ud->sink->thread_info.state) ||  !PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state))
+		return;
+
+	/* Just hand this one over to the master sink */
 #ifdef EQPRO_DEBUG
 	pa_log("Do something?");
 #endif
@@ -177,9 +178,9 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	pa_sink_process_rewind(ud->sink, 0); //no rewind
 
 /*	while(pa_memblockq_peek(ud->sink_input, &tchunk)<0)
-	{
-		
-	}*/
+        {
+
+        }*/
 	chunk->index=0;
 	chunk->length=sz;
 	chunk->memblock=pa_memblock_new(in_snk->sink->core->mempool,chunk->length);
@@ -188,7 +189,7 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	fs=pa_frame_size(&ud->sink->sample_spec);
 
 	/*read all buffer*/
-	pa_sink_render_full(ud->sink,sz,&tchunk); 
+	pa_sink_render_full(ud->sink,sz,&tchunk);
 	nsamp=sz/fs;
 #ifdef EQPRO_DEBUG
 	pa_log(pa_sprintf_malloc("samples: %d",nsamp));
@@ -200,7 +201,7 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	double foo_t=0;
 	while(nsamp>0)
 	{
-		for(c=0;c<ud->eqp.nch;c++)
+		for(c=0; c<ud->eqp.nch; c++)
 		{
 			*dst=(float)eq_filter(*src,ud->eqp.par,ud->eqp.c,ud->eqp.X[c],ud->eqp.N);
 //			*dst=sin(2*M_PI*500*foo_t);
@@ -224,7 +225,7 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	return 0;
 }
 
-static void sink_input_process_rewind_cb(pa_sink_input* in_snk,size_t sz) 
+static void sink_input_process_rewind_cb(pa_sink_input* in_snk,size_t sz)
 {
 	struct userdata* ud;
 #ifdef EQPRO_DEBUG
@@ -232,7 +233,7 @@ static void sink_input_process_rewind_cb(pa_sink_input* in_snk,size_t sz)
 #endif
 	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
-	
+
 	pa_sink_process_rewind(ud->sink, 0); //no rewind
 }
 
@@ -258,7 +259,7 @@ static void sink_input_update_max_request_cb(pa_sink_input* in_snk, size_t sz)
 #endif
 	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
-	
+
 	//pa_sink_set_max_request_within_thread(ud->sink, sz * pa_frame_size(&ud->sink->sample_spec) / pa_frame_size(&ud->sink_input->sample_spec));
 	pa_sink_set_max_request_within_thread(ud->sink, 0); //no rewind
 
@@ -288,7 +289,7 @@ static void sink_input_update_sink_fixed_latency_cb(pa_sink_input* in_snk)
 	pa_sink_set_fixed_latency_within_thread(ud->sink,in_snk->sink->thread_info.fixed_latency);
 }
 
-static void sink_input_kill_cb(pa_sink_input* in_snk) 
+static void sink_input_kill_cb(pa_sink_input* in_snk)
 {
 	struct userdata* ud;
 #ifdef EQPRO_DEBUG
@@ -296,21 +297,21 @@ static void sink_input_kill_cb(pa_sink_input* in_snk)
 #endif
 	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
-	
+
 	/* The order here matters! We first kill the sink input, followed
-     * by the sink. That means the sink callbacks must be protected
-     * against an unconnected sink input! */
+	 * by the sink. That means the sink callbacks must be protected
+	 * against an unconnected sink input! */
 
-    pa_sink_input_unlink(ud->sink_input);
-    pa_sink_unlink(ud->sink);
+	pa_sink_input_unlink(ud->sink_input);
+	pa_sink_unlink(ud->sink);
 
-    pa_sink_input_unref(ud->sink_input);
-    ud->sink_input = NULL;
+	pa_sink_input_unref(ud->sink_input);
+	ud->sink_input = NULL;
 
-    pa_sink_unref(ud->sink);
-    ud->sink = NULL;
+	pa_sink_unref(ud->sink);
+	ud->sink = NULL;
 
-    pa_module_unload_request(ud->module,true);
+	pa_module_unload_request(ud->module,true);
 }
 
 static void sink_input_attach_cb(pa_sink_input* in_snk)
@@ -324,15 +325,15 @@ static void sink_input_attach_cb(pa_sink_input* in_snk)
 
 
 	pa_sink_set_rtpoll(ud->sink, in_snk->sink->thread_info.rtpoll);
-    pa_sink_set_latency_range_within_thread(ud->sink, in_snk->sink->thread_info.min_latency, in_snk->sink->thread_info.max_latency);
+	pa_sink_set_latency_range_within_thread(ud->sink, in_snk->sink->thread_info.min_latency, in_snk->sink->thread_info.max_latency);
 
-    pa_sink_set_fixed_latency_within_thread(ud->sink, in_snk->sink->thread_info.fixed_latency);
+	pa_sink_set_fixed_latency_within_thread(ud->sink, in_snk->sink->thread_info.fixed_latency);
 
-    pa_sink_set_max_request_within_thread(ud->sink, pa_sink_input_get_max_request(in_snk));
-    //pa_sink_set_max_rewind_within_thread(ud->sink, pa_sink_input_get_max_rewind(in_snk));
-    pa_sink_set_max_rewind_within_thread(ud->sink, 0);
+	pa_sink_set_max_request_within_thread(ud->sink, pa_sink_input_get_max_request(in_snk));
+	//pa_sink_set_max_rewind_within_thread(ud->sink, pa_sink_input_get_max_rewind(in_snk));
+	pa_sink_set_max_rewind_within_thread(ud->sink, 0);
 
-    pa_sink_attach_within_thread(ud->sink);
+	pa_sink_attach_within_thread(ud->sink);
 }
 
 static void sink_input_detach_cb(pa_sink_input* in_snk)
@@ -343,7 +344,7 @@ static void sink_input_detach_cb(pa_sink_input* in_snk)
 #endif
 	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
-	
+
 	pa_sink_detach_within_thread(ud->sink);
 
 	pa_sink_set_rtpoll(ud->sink, NULL);
@@ -359,8 +360,8 @@ static void sink_input_state_change_cb(pa_sink_input* in_snk, pa_sink_input_stat
 	pa_sink_input_assert_ref(in_snk);
 	pa_assert(ud=(struct userdata*)in_snk->userdata);
 
-	if(PA_SINK_INPUT_IS_LINKED(state) && 
-			in_snk->thread_info.state == PA_SINK_INPUT_INIT) {
+	if(PA_SINK_INPUT_IS_LINKED(state) &&
+	   in_snk->thread_info.state == PA_SINK_INPUT_INIT) {
 		pa_sink_input_request_rewind(in_snk,0,false,true,true);
 	}
 }
@@ -377,7 +378,7 @@ static bool sink_input_may_move_to_cb(pa_sink_input* in_snk, pa_sink* dest)
 	return ud->sink != dest;
 }
 
-static void sink_input_moving_cb(pa_sink_input* in_snk, pa_sink* dest) 
+static void sink_input_moving_cb(pa_sink_input* in_snk, pa_sink* dest)
 {
 	struct userdata* ud;
 #ifdef EQPRO_DEBUG
@@ -388,16 +389,16 @@ static void sink_input_moving_cb(pa_sink_input* in_snk, pa_sink* dest)
 
 
 	if (ud->autoloaded) {
-        /* We were autoloaded, and don't support moving. Let's unload ourselves. */
-        pa_log("Can't move autoloaded stream, unloading");
-        pa_module_unload_request(ud->module, true);
-    }
+		/* We were autoloaded, and don't support moving. Let's unload ourselves. */
+		pa_log("Can't move autoloaded stream, unloading");
+		pa_module_unload_request(ud->module, true);
+	}
 
-    if (dest) {
-        pa_sink_set_asyncmsgq(ud->sink, dest->asyncmsgq);
-        pa_sink_update_flags(ud->sink, PA_SINK_LATENCY|PA_SINK_DYNAMIC_LATENCY, dest->flags);
-    } else
-        pa_sink_set_asyncmsgq(ud->sink, NULL);
+	if (dest) {
+		pa_sink_set_asyncmsgq(ud->sink, dest->asyncmsgq);
+		pa_sink_update_flags(ud->sink, PA_SINK_LATENCY|PA_SINK_DYNAMIC_LATENCY, dest->flags);
+	} else
+		pa_sink_set_asyncmsgq(ud->sink, NULL);
 }
 
 static void use_volume_sharing(pa_sink_input* in_snk)
@@ -438,7 +439,7 @@ static void sink_input_mute_changed_cb(pa_sink_input* in_snk)
 void eq_preproccesing(equalizerPar *eqp,double SR)
 {
 	double v,g,cw,wcross,wc_n,fc_n,f_max,bw_n,T,tbw,c_m,d;
-	double a[3], b[3];	
+	double a[3], b[3];
 	int n;
 
 	T=1.0/SR;
@@ -448,7 +449,7 @@ void eq_preproccesing(equalizerPar *eqp,double SR)
 	v=pow(g,1.0/M)-1;
 	f_max=eqp->f_min*pow(eqp->R,eqp->N-1);
 
-	for(n=0;n<eqp->N;n++)
+	for(n=0; n<eqp->N; n++)
 	{
 		fc_n=round(exp(log(eqp->f_min)+log(f_max/(double)eqp->f_min)*(n-1)/(double)(eqp->N-1)));
 		wc_n=2*M_PI*fc_n;
@@ -489,7 +490,7 @@ double eq_filter(double u, double par[], double **c, double **x, int N)
 	int n,i;
 	double y=u;
 
-	for(n=0;n<N;n++)
+	for(n=0; n<N; n++)
 	{
 		gg=2*par[n];
 		gg1=par[n]+1;
@@ -506,7 +507,7 @@ double eq_filter(double u, double par[], double **c, double **x, int N)
 		xn[2]=x[n][0]*c[n][6]+xn2cn1-x[n][3]+u0*c[n][5];
 		xn[3]=x[n][0]*c[n][8]+u0*c[n][7];
 
-		for (i=0;i<M2;i++)
+		for (i=0; i<M2; i++)
 			x[n][i]=xn[i];
 	}
 	return y;
@@ -524,31 +525,31 @@ void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, doub
 	eqp->N=floor(log(FN/f_min)/log(eqp->R));
 
 	eqp->c=(double**)pa_xmalloc(eqp->N*sizeof(double*));
-	for(n=0;n<eqp->N;n++)
+	for(n=0; n<eqp->N; n++)
 		eqp->c[n]=(double*)pa_xmalloc(10*sizeof(double));
 
 	eqp->X=(double***)pa_xmalloc(nChans*sizeof(double**));
-	for(i=0;i<nChans;i++)
+	for(i=0; i<nChans; i++)
 	{
 		eqp->X[i]=(double**)pa_xmalloc(eqp->N*sizeof(double*));
-		for(n=0;n<eqp->N;n++)
+		for(n=0; n<eqp->N; n++)
 			eqp->X[i][n]=(double*)pa_xmalloc0(M2*sizeof(double));
 	}
 
 	eqp->par=(double*)pa_xmalloc0(eqp->N);
 
-	for(i=0;i<4;i++) //test
+	for(i=0; i<4; i++) //test
 		eqp->par[i]=1;
-	for(i=0;i<eqp->N;i++)
+	for(i=0; i<eqp->N; i++)
 		eqp->par[i]=-1;
-		
+
 
 }
 
-int pa__init(pa_module *m) 
+int pa__init(pa_module *m)
 {
-    pa_assert(m);
-    
+	pa_assert(m);
+
 	struct userdata *ud;
 	pa_modargs *ma;
 	pa_sink *master=NULL;
@@ -566,7 +567,7 @@ int pa__init(pa_module *m)
 #ifdef EQPRO_DEBUG
 	pa_log("module-eqpro: its started");
 #endif
-	
+
 	if(!(ma=pa_modargs_new(m->argument,_valid_modargs)))
 	{
 		pa_log("Failed to parse module arguments.");
@@ -595,8 +596,8 @@ int pa__init(pa_module *m)
 	{
 		pa_log("f0= expexts a boolean argument");
 		goto fail;
-	}	
-	
+	}
+
 	ud->autoloaded=false;
 	if(pa_modargs_get_value_boolean(ma,"autoloaded",&ud->autoloaded)<0)
 	{
@@ -616,7 +617,7 @@ int pa__init(pa_module *m)
 
 #ifdef EQPRO_DEBUG
 	pa_log("Create sink init");
-#endif	/* Create sync init*/
+#endif  /* Create sync init*/
 	pa_sink_new_data_init(&sink_data);
 	sink_data.driver=__FILE__;
 	sink_data.module=m;
@@ -706,6 +707,9 @@ int pa__init(pa_module *m)
 	return 0;
 
 fail:
+#ifdef EQPRO_DEBUG
+	pa_log("jmp to fail...");
+#endif
 	if(ma)
 		pa_modargs_free(ma);
 
@@ -716,7 +720,7 @@ fail:
 
 void pa__done(pa_module *m) //TO DO: Free all resources
 {
-    pa_assert(m);
+	pa_assert(m);
 	struct userdata *ud;
 
 #ifdef EQPRO_DEBUG
@@ -741,7 +745,7 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 #ifdef EQPRO_DEBUG
 	pa_log("Relase sink...");
 #endif
-	if(ud->sink) 
+	if(ud->sink)
 		pa_sink_unlink(ud->sink);
 
 #ifdef EQPRO_DEBUG
@@ -757,30 +761,30 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 		pa_sink_unref(ud->sink);
 
 #ifdef EQPRO_DEBUG
-	pa_log("xfree par...");
+	//pa_log("xfree par...");
 #endif
-	if(ud->eqp.par)
-		pa_xfree(ud->eqp.par);
+	//if(ud->eqp.par)
+	//	pa_xfree(ud->eqp.par);
 
 	/* Freeing resources */
 #ifdef EQPRO_DEBUG
 	pa_log("xfree matrix...");
 #endif
 	int n,i;
-	for(n=0;n<ud->eqp.N;n++) {
+	for(n=0; n<ud->eqp.N; n++) {
 		pa_xfree(ud->eqp.c[n]);
 	}
 
 	pa_xfree(ud->eqp.c);
 
-	for(n=0;n<ud->eqp.nch;n++) {
-		for(i=0;i<ud->eqp.N;i++) {
+	for(n=0; n<ud->eqp.nch; n++) {
+		for(i=0; i<ud->eqp.N; i++) {
 			pa_xfree(ud->eqp.X[n][i]);
 		}
-		
+
 		pa_xfree(ud->eqp.X[n]);
 	}
-	
+
 	pa_xfree(ud->eqp.X);
 
 #ifdef EQPRO_DEBUG

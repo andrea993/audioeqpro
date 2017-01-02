@@ -12,7 +12,6 @@
 #error Your OS is not supported for now
 #endif //__gnu_linux__
 
-#include "q_pamod.h"
 #include "q_pulseutil.h"
 #include "qmlutils.h"
 #include "moduleobject.h"
@@ -47,17 +46,6 @@ int main(int argc, char *argv[])
     QObject::connect(&qml_engine,SIGNAL(quit())
                      ,&qmlutil,SLOT(squit()));
 
-    /* Load and check module from PA */
-    try {
-        qpa::loadModule(MODULE_NAME,MODULE_PARAMS);
-    } catch(qpa::PulseAudioException pae) {
-        QObject* loadingDialog = createQmlCompo(qml_engine,"loading_module_failure.qml");
-        qWarning() << pae.what() << '\n';
-        app.exec();
-        delete loadingDialog;
-        quick_exit(1);
-    }
-
     void* so_handler;
     if((so_handler=checkAndLoadDl()) == NULL) {
         char dlstrerr[256];
@@ -72,13 +60,20 @@ int main(int argc, char *argv[])
     }
 
     ModuleObject::getInstance()->setObjectHandler(so_handler);
-
     qml_engine.rootContext()->setContextProperty("utils",&qmlutil);
+
     QObject* mainEqWindow = createQmlCompo(qml_engine,"main.qml");
+    QObject* warningModule = createQmlCompo(qml_engine,"is_loaded.qml");
+
+    warningModule->setParent(mainEqWindow);
+    mainEqWindow->findChild<QObject*>("welcomeTextObj")->setProperty("text",QString("Running PulseAudio version: %1")
+                                                                     .arg(qpa::util::getFullPulseVersion()));
 
     app.exec();
 
     /* bye */
+    delete warningModule;
     delete mainEqWindow;
+
     return 0;
 }
