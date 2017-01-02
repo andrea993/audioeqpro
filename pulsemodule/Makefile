@@ -22,7 +22,7 @@ dbg:
 	@echo " >>> (build)(debug) Building object from: $(SRC)..."
 	$(CC) $(CFLAGS) $(SRC) || exit 1
 	@echo " >>> (build)(debug) Linking..."
-	$(CC) $(CFLAGS_LINKSTEP) $(MOD_OBJ_OUT) || exit 2
+	$(CC) $(CFLAGS_LINKSTEP) $(MOD_OBJ_OUT_DBG) || exit 2
 	@echo " >>> (build)(debug) Output: $(MOD_SO_OUT_DBG)"
 	@echo " >>> [DONE] Finished"
 install:

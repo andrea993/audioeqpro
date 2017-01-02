@@ -11,6 +11,7 @@
 #include <pulse/sample.h>
 #include <pulse/gccmacro.h>
 #include <pulse/def.h>
+#include <pulse/xmalloc.h>
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -706,6 +707,9 @@ int pa__init(pa_module *m)
 	return 0;
 
 fail:
+#ifdef EQPRO_DEBUG
+	pa_log("jmp to fail...");
+#endif
 	if(ma)
 		pa_modargs_free(ma);
 
@@ -757,10 +761,10 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 		pa_sink_unref(ud->sink);
 
 #ifdef EQPRO_DEBUG
-	pa_log("xfree par...");
+	//pa_log("xfree par...");
 #endif
-	if(ud->eqp.par)
-		pa_xfree(ud->eqp.par);
+	//if(ud->eqp.par)
+	//	pa_xfree(ud->eqp.par);
 
 	/* Freeing resources */
 #ifdef EQPRO_DEBUG
