@@ -56,6 +56,8 @@ install:
 clean:
 	@echo " >>> (clean) Removing $(MOD_SO_OUT) and $(MOD_SO_OUT_DBG)"
 	rm $(MOD_SO_OUT) $(MOD_SO_OUT_DBG) || echo "One or both files don't exist"
+	@echo " >>> (clean) Removing object files"
+	rm *.o 
 
 .PHONY:
 	build, install, all, clean
