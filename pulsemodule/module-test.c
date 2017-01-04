@@ -1,5 +1,6 @@
 #define __INCLUDED_FROM_PULSE_AUDIO
 #include "config.h"
+
 #include <pulsecore/module.h>
 #include <pulsecore/log.h>
 #include <pulsecore/modargs.h>
@@ -8,6 +9,8 @@
 #include <pulsecore/sink.h>
 #include <pulsecore/source.h>
 #include <pulsecore/memblock.h>
+#include <pulsecore/object.h>
+
 #include <pulse/sample.h>
 #include <pulse/gccmacro.h>
 #include <pulse/def.h>
