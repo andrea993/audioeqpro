@@ -1,5 +1,6 @@
 #define __INCLUDED_FROM_PULSE_AUDIO
 #include "config.h"
+
 #include <pulsecore/module.h>
 #include <pulsecore/log.h>
 #include <pulsecore/modargs.h>
@@ -8,6 +9,8 @@
 #include <pulsecore/sink.h>
 #include <pulsecore/source.h>
 #include <pulsecore/memblock.h>
+#include <pulsecore/object.h>
+
 #include <pulse/sample.h>
 #include <pulse/gccmacro.h>
 #include <pulse/def.h>
@@ -198,7 +201,7 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	dst=(float*)pa_memblock_acquire(chunk->memblock);
 
 
-	double foo_t=0;
+	//double foo_t=0;
 	while(nsamp>0)
 	{
 		for(c=0; c<ud->eqp.nch; c++)
@@ -523,6 +526,7 @@ void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, doub
 	eqp->nch=nChans;
 	eqp->R=pow(2,oct);
 	eqp->N=floor(log(FN/f_min)/log(eqp->R));
+	eqp->par=NULL;
 
 	eqp->c=(double**)pa_xmalloc(eqp->N*sizeof(double*));
 	for(n=0; n<eqp->N; n++)
@@ -538,16 +542,23 @@ void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, doub
 
 	eqp->par=(double*)pa_xmalloc0(eqp->N);
 
+	/*
 	for(i=0; i<4; i++) //test
 		eqp->par[i]=1;
 	for(i=0; i<eqp->N; i++)
 		eqp->par[i]=-1;
-
+	*/
+	for(i=0;i<eqp->N;i++)
+		eqp->par[i]=0;
 
 }
 
 int pa__init(pa_module *m)
 {
+#ifdef EQPRO_DEBUG
+	pa_log("Starting up... pa__init called");
+#endif 
+
 	pa_assert(m);
 
 	struct userdata *ud;
@@ -563,10 +574,6 @@ int pa__init(pa_module *m)
 	bool use_volume_sharing = false; //true
 	bool force_flat_volume = false;
 	pa_memchunk silence;
-
-#ifdef EQPRO_DEBUG
-	pa_log("module-eqpro: its started");
-#endif
 
 	if(!(ma=pa_modargs_new(m->argument,_valid_modargs)))
 	{
@@ -704,11 +711,15 @@ int pa__init(pa_module *m)
 	eq_init(&ud->eqp,12,30,2,44100,1);
 	eq_preproccesing(&ud->eqp,44100);
 
+#ifdef EQPRO_DEBUG
+	pa_log("pa__init done, returning 0");
+#endif 
+
 	return 0;
 
 fail:
 #ifdef EQPRO_DEBUG
-	pa_log("jmp to fail...");
+	pa_log("pa__init !!!!!FAILURE!!!!! fail label reached");
 #endif
 	if(ma)
 		pa_modargs_free(ma);
@@ -724,7 +735,7 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 	struct userdata *ud;
 
 #ifdef EQPRO_DEBUG
-	pa_log("module-eqpro: its done");
+	pa_log("pa__done called");
 #endif
 
 	if(!(ud=(struct userdata*)m->userdata)) {
@@ -761,10 +772,10 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 		pa_sink_unref(ud->sink);
 
 #ifdef EQPRO_DEBUG
-	//pa_log("xfree par...");
+	pa_log("xfree par...");
 #endif
-	//if(ud->eqp.par)
-	//	pa_xfree(ud->eqp.par);
+	if(ud->eqp.par)
+		pa_xfree(ud->eqp.par);
 
 	/* Freeing resources */
 #ifdef EQPRO_DEBUG
@@ -791,7 +802,9 @@ void pa__done(pa_module *m) //TO DO: Free all resources
 	pa_log("xfree ud...");
 #endif
 	pa_xfree(ud);
+
+
 #ifdef EQPRO_DEBUG
-	pa_log("Last execution line, all right");
+	pa_log("pa__done ended, bye bye (last execution line, all right)");
 #endif
 }
