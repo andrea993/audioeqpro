@@ -4,11 +4,11 @@ MOD_SO_OUT=module-test.so
 MOD_SO_OUT_DBG=module-test-dbg.so
 CC=gcc
 CFLAGS_LINKSTEP=-shared -lm -lpulse -o $(MOD_SO_OUT)
-CFLAGS=-Wall -Wextra -fPIC -O2 -c -o $(MOD_OBJ_OUT)
+CFLAGS=-Wall -Wextra -fPIC -O2 -g -c -o $(MOD_OBJ_OUT)
 SRC=module-test.c
 
 dbg:CFLAGS_LINKSTEP=-shared -lm -lpulse -o $(MOD_SO_OUT_DBG)
-dbg:CFLAGS=-Wall -Wextra -fPIC -g -c -DEQPRO_DEBUG -o $(MOD_OBJ_OUT_DBG)
+dbg:CFLAGS=-Wall -Wextra -fPIC -O0 -g -c -DEQPRO_DEBUG -o $(MOD_OBJ_OUT_DBG)
 all:build
 
 build:

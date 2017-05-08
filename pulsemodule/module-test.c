@@ -135,11 +135,30 @@ static void sink_update_requested_latency_cb(pa_sink *s)
 	pa_sink_assert_ref(s);
 	pa_assert_se(ud=(struct userdata*)s->userdata);
 
-	if(!PA_SINK_IS_LINKED(ud->sink->thread_info.state) || !PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state))
+	if(!PA_SINK_IS_LINKED(ud->sink->thread_info.state) || 
+			!PA_SINK_INPUT_IS_LINKED(ud->sink_input->thread_info.state))
 		return;
 
 	/* Just hand this one over to the master sink */
-	pa_sink_input_set_requested_latency_within_thread(ud->sink_input,pa_sink_get_requested_latency_within_thread(s));
+	pa_sink_input_set_requested_latency_within_thread(
+			ud->sink_input,
+			pa_sink_get_requested_latency_within_thread(s));
+}
+
+static void sink_set_mute_cb(pa_sink *s) {
+    struct userdata *ud;
+
+#ifdef EQPRO_DEBUG
+	pa_log("Callback: sink_update_requested_latency_cb");
+#endif
+    pa_sink_assert_ref(s);
+    pa_assert_se(ud =(struct userdata*)s->userdata);
+
+    if (!PA_SINK_IS_LINKED(pa_sink_get_state(s)) ||
+        !PA_SINK_INPUT_IS_LINKED(pa_sink_input_get_state(ud->sink_input)))
+        return;
+
+    pa_sink_input_set_mute(ud->sink_input, s->muted, s->save_muted);
 }
 
 static void sink_request_rewind_cb(pa_sink *s)
@@ -549,7 +568,7 @@ void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, doub
 		eqp->par[i]=-1;
 	*/
 	for(i=0;i<eqp->N;i++)
-		eqp->par[i]=0;
+		eqp->par[i]=-1;
 
 }
 
@@ -571,7 +590,7 @@ int pa__init(pa_module *m)
 	double gaindb,f0;
 	unsigned sr;
 	char out[100];
-	bool use_volume_sharing = false; //true
+	bool use_volume_sharing = true;
 	bool force_flat_volume = false;
 	pa_memchunk silence;
 
@@ -648,9 +667,10 @@ int pa__init(pa_module *m)
 	ud->sink->set_state = sink_set_state_cb;
 	ud->sink->update_requested_latency = sink_update_requested_latency_cb;
 	ud->sink->request_rewind = sink_request_rewind_cb;
+	pa_sink_set_set_mute_callback(ud->sink, sink_set_mute_cb);
 	/*TO DO ADD OTHERS CALLBACK AND MANAGE THE CALLBACK*/
 
-	pa_sink_set_asyncmsgq(ud->sink, master->asyncmsgq);
+	pa_sink_set_asyncmsgq(ud->sink, master->asyncmsgq); //enable callback
 #ifdef EQPRO_DEBUG
 	pa_log("Create sink done");
 #endif
