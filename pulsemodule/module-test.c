@@ -225,11 +225,13 @@ static int sink_input_pop_cb(pa_sink_input* in_snk, size_t sz, pa_memchunk* chun
 	{
 		for(c=0; c<ud->eqp.nch; c++)
 		{
-			*dst=(float)eq_filter(*src,ud->eqp.par,ud->eqp.c,ud->eqp.X[c],ud->eqp.N);
+			//*dst=(float)eq_filter(*src,ud->eqp.par,ud->eqp.c,ud->eqp.X[c],ud->eqp.N);
+			*dst=*src;
 //			*dst=sin(2*M_PI*500*foo_t);
 			src++;
 			dst++;
 		}
+
 		nsamp--;
 		//foo_t+=1/48000.0;
 	}
@@ -590,7 +592,7 @@ int pa__init(pa_module *m)
 	double gaindb,f0;
 	unsigned sr;
 	char out[100];
-	bool use_volume_sharing = true;
+	bool use_volume_sharing = false;
 	bool force_flat_volume = false;
 	pa_memchunk silence;
 
@@ -728,8 +730,8 @@ int pa__init(pa_module *m)
 	pa_modargs_free(ma);
 
 	//init equalizer
-	eq_init(&ud->eqp,12,30,2,44100,1);
-	eq_preproccesing(&ud->eqp,44100);
+	eq_init(&ud->eqp,12,30,2,44800,1);
+	eq_preproccesing(&ud->eqp,44800);
 
 #ifdef EQPRO_DEBUG
 	pa_log("pa__init done, returning 0");
