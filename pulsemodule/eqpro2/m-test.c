@@ -36,6 +36,8 @@
 #include <pulsecore/sample-util.h>
 #include <pulsecore/ltdl-helper.h>
 #include <math.h>
+#include <string.h>
+#include <ctype.h>
 #include "m-test.h"
 
 #define M 2
@@ -55,6 +57,11 @@ PA_MODULE_USAGE(
           "channel_map=<channel map> "
           "use_volume_sharing=<yes or no> "
           "force_flat_volume=<yes or no> "
+			 "f0=<last frequecy of the first band> "
+			 "octave=<octaves between bands> "
+			 "Nbands=<number of bands>"
+			 "par=<equalizer levels in the form (x1,x2,...,xn) from -1 to 1>"
+
         ));
 
 #define MEMBLOCKQ_MAXLENGTH (16*1024*1024)
@@ -87,6 +94,10 @@ struct userdata {
 };
 
 static const char* const valid_modargs[] = {
+	 "f0",
+	 "Nbands",
+	 "octave",
+	 "par",
     "sink_name",
     "sink_properties",
     "master",
@@ -100,10 +111,10 @@ static const char* const valid_modargs[] = {
 
 /*equazlier functions */
 void eq_preproccesing(equalizerPar *eqp, double SR);
-void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, double oct);
+void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, double oct, int N, double *par);
 double eq_filter(double u, double par[], double **c, double **x, int N);
-
-
+void calcArgs(bool isf0, bool isNbands, bool isoctave, double *f0, unsigned *Nbands, double *octave, double FN);
+int readParFromStr(char *str, unsigned N, double *out);
 
 /* Called from I/O thread context */
 static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t offset, pa_memchunk *chunk) {
@@ -277,7 +288,7 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes, pa_memchunk *chunk
     /* (3) PUT YOUR CODE HERE TO DO SOMETHING WITH THE DATA */
 
 
-	double foo_t=0;
+//	double foo_t=0;
 	while(n>0)
 	{
 		for(c=0; c<u->channels; c++)
@@ -289,8 +300,8 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes, pa_memchunk *chunk
 			dst++;
 		}
 
-		n--;
-		foo_t+=1/48000.0;
+//		n--;
+//		foo_t+=1/48000.0;
 	}
 
 
@@ -520,6 +531,13 @@ int pa__init(pa_module*m) {
     bool use_volume_sharing = true;
     bool force_flat_volume = false;
     pa_memchunk silence;
+	 double f0=30, octave=1;
+	 unsigned Nbands;
+	 double* par=NULL;
+	 char *str=NULL;
+	 double db=12; //not need
+	 bool isf0=false, isNbands=false, isoctave=false;
+	 int ret;
 
     pa_assert(m);
 
@@ -551,7 +569,54 @@ int pa__init(pa_module*m) {
     if (pa_modargs_get_value_boolean(ma, "force_flat_volume", &force_flat_volume) < 0) {
         pa_log("force_flat_volume= expects a boolean argument");
         goto fail;
+    } 
+	
+	 ret=pa_modargs_get_value_double(ma, "f0", &f0); 
+	 if (ret < 0) {
+        pa_log("f0= expects a double argument");
+        goto fail;
+	 }
+    if (ret > 0 && (f0 <= 0 || f0>=ss.rate/2.0)) { 
+		 pa_log("f0= expects a positive double less than rate/2"); 
+		 goto fail;
+	 }
+    if (ret > 0)
+	    isf0=true;
+    
+    ret=pa_modargs_get_value_double(ma, "octave", &octave);
+	 if (ret < 0) {
+        pa_log("octave= expects a double argument");
+        goto fail;
+		  
     }
+    if (ret > 0 && octave <= 0) { 
+		 pa_log("octave= expects a positive double");
+		 goto fail;
+	 }
+	 if (ret > 0)
+		 isoctave=true;
+
+    ret=pa_modargs_get_value_u32(ma, "Nbands", &Nbands);
+	 if (ret < 0) {
+        pa_log("Nbands= expects an unsigned argument");
+        goto fail;
+    }
+	 if (ret > 0)
+		 isNbands=true;
+
+	 if (isoctave && isNbands && isf0) {
+        pa_log("You can choose up to two arguments between: octave, Nbands, f0");
+		  goto fail;
+	 }
+	calcArgs(isf0, isNbands, isoctave, &f0, &Nbands, &octave, ss.rate/2.0);
+
+    par=pa_xmalloc0(Nbands*sizeof(double));
+    if ((str=pa_xstrdup(pa_modargs_get_value(ma, "par", NULL)))) {
+		 if (readParFromStr(str, Nbands, par) < 0) {
+			 pa_log("Nbands= expects an array of double in the format (x1,x2,...,xn) from -1 to 1");
+			 goto fail;
+		 }
+	 }
 
     if (use_volume_sharing && force_flat_volume) {
         pa_log("Flat volume can't be forced when using volume sharing.");
@@ -573,7 +638,7 @@ int pa__init(pa_module*m) {
     pa_sink_new_data_set_channel_map(&sink_data, &map);
     pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_MASTER_DEVICE, master->name);
     pa_proplist_sets(sink_data.proplist, PA_PROP_DEVICE_CLASS, "filter");
-    pa_proplist_sets(sink_data.proplist, "device.vsink.name", sink_data.name);
+    pa_proplist_sets(sink_data.proplist, "device.vsink.eqpro", sink_data.name);
 
     if (pa_modargs_get_proplist(ma, "sink_properties", sink_data.proplist, PA_UPDATE_REPLACE) < 0) {
         pa_log("Invalid properties");
@@ -585,7 +650,7 @@ int pa__init(pa_module*m) {
         const char *z;
 
         z = pa_proplist_gets(master->proplist, PA_PROP_DEVICE_DESCRIPTION);
-        pa_proplist_setf(sink_data.proplist, PA_PROP_DEVICE_DESCRIPTION, "Virtual Sink %s on %s", sink_data.name, z ? z : master->name);
+        pa_proplist_setf(sink_data.proplist, PA_PROP_DEVICE_DESCRIPTION, "EqualizerPro Sink %s on %s", sink_data.name, z ? z : master->name);
     }
 
     u->sink = pa_sink_new(m->core, &sink_data, (master->flags & (PA_SINK_LATENCY|PA_SINK_DYNAMIC_LATENCY))
@@ -651,24 +716,26 @@ int pa__init(pa_module*m) {
     u->memblockq = pa_memblockq_new("module-virtual-sink memblockq", 0, MEMBLOCKQ_MAXLENGTH, 0, &ss, 1, 1, 0, &silence);
     pa_memblock_unref(silence.memblock);
 
-    /* (9) INITIALIZE ANYTHING ELSE YOU NEED HERE */
-	double db=12;
-	double f0=30;
-	double oct=1;
-
-	eq_init(&u->eqp,db,f0,u->channels,ss.rate,oct);
-	eq_preproccesing(&u->eqp,ss.rate);
+	 //init eq
+	 eq_init(&u->eqp,db,f0,u->channels,octave,(int)Nbands,par);
+	 eq_preproccesing(&u->eqp,ss.rate);
 
     pa_sink_put(u->sink);
     pa_sink_input_put(u->sink_input);
 
     pa_modargs_free(ma);
 
+	 pa_xfree(str);
+
     return 0;
 
 fail:
     if (ma)
         pa_modargs_free(ma);
+	 if (par)
+		 pa_xfree(par);
+	 if (str)
+		 pa_xfree(str);
 
     pa__done(m);
 
@@ -716,14 +783,14 @@ void pa__done(pa_module*m) {
         pa_xfree(u->eqp.par);
 
 	
-		for(n=0; n<u->eqp.N; n++) {
+	 for(n=0; n<u->eqp.N; n++) {
 			pa_xfree(u->eqp.c[n]);
-		}
+	 }
 
-		pa_xfree(u->eqp.c);
+	 pa_xfree(u->eqp.c);
 
-		for(n=0; n<(int)u->channels; n++) {
-			for(i=0; i<u->eqp.N; i++) {
+	 for(n=0; n<(int)u->channels; n++) {
+	   	for(i=0; i<u->eqp.N; i++) {
 				pa_xfree(u->eqp.X[n][i]);
 			}
 
@@ -732,8 +799,8 @@ void pa__done(pa_module*m) {
 
 		pa_xfree(u->eqp.X);
 
-	/*free userdata*/
-    pa_xfree(u);
+	   /*free userdata*/
+      pa_xfree(u);
 }
 
 double eq_filter(double u, double par[], double **c, double **x, int N)
@@ -767,15 +834,14 @@ double eq_filter(double u, double par[], double **c, double **x, int N)
 
 }
 
-void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, double oct)
+void eq_init(equalizerPar *eqp, double db, double f_min, int nChans, double oct, int N, double *par)
 {
 	int n,i;
-	double FN=SR/2.0;
 	eqp->f_min=f_min;
 	eqp->DB=db;
 	eqp->R=pow(2,oct);
-	eqp->N=floor(log(FN/f_min)/log(eqp->R));
-	eqp->par=NULL;
+	eqp->N=N;
+	eqp->par=par;
 
 	eqp->c=(double**)pa_xmalloc(eqp->N*sizeof(double*));
 	for(n=0; n<eqp->N; n++)
@@ -788,17 +854,6 @@ void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, int SR, doub
 		for(n=0; n<eqp->N; n++)
 			eqp->X[i][n]=(double*)pa_xmalloc0(M2*sizeof(double));
 	}
-
-	eqp->par=(double*)pa_xmalloc0(eqp->N*sizeof(double));
-
-	/*
-	for(i=0; i<4; i++) //test
-		eqp->par[i]=1;
-	for(i=0; i<eqp->N; i++)
-		eqp->par[i]=-1;
-	*/
-	for(i=0;i<eqp->N;i++)
-		eqp->par[i]=-1;
 
 }
 
@@ -849,3 +904,59 @@ void eq_preproccesing(equalizerPar *eqp, double SR)
 	}
 }
 
+void calcArgs(bool isf0, bool isNbands, bool isoctave, double *f0, unsigned *Nbands, double *octave, double FN)
+{
+	double R;
+	R=pow(FN / *f0, 1.0 / *Nbands);
+
+	if (isf0 && isNbands){
+		*octave=log(R)/log(2);
+		return;
+	}
+	if (isoctave && isNbands){
+		*f0=FN/pow(R,*Nbands);
+		return;
+	}
+
+	*Nbands=floor(log(FN/ *f0)/log(R));
+
+}
+
+int readParFromStr(char *str, unsigned N, double *out)
+{
+	unsigned i,j;
+	if (strlen(str) < 2)
+		return -1;
+
+	if (str[0] != '(')
+		return -1;
+
+	i=1;
+	j=0;
+	while (i < strlen(str) - 1 && j<N){
+		if(!isdigit(str[i]))
+			return -1;
+
+		out[j]=atof(str+i);
+		if (fabs(out[j]) > 1)
+			return -1;
+
+		while(isdigit(str[i]))
+			i++;
+
+		if(str[i] != ',')
+			return -1;
+
+		i++;
+		j++;
+	}
+
+	if (str[i] != ')')
+		return -1;
+
+	for (; j<N; j++)
+		out[j]=0;
+
+	return 0;
+
+}
