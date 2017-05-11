@@ -1,7 +1,7 @@
 # Pulseaudio module 
 This implemenation of the equalizer in a pulseadudio module allow you to use my algorithm in your devices that support pulseaudio.
 
-To install this module you need to build the last version of pulseaudio source and add the equalizer in the tree, to do this you can easly follow the instruction below.
+To install this module you need to build the latest version of pulseaudio source and add the equalizer in the tree, to do this you can easly follow the instruction below.
 
 ## Installation
 - Make sure that you have not a pulseaudio version installed, look your package manager 
@@ -26,7 +26,7 @@ To install this module you need to build the last version of pulseaudio source a
   
   cd src
   wget https://raw.githubusercontent.com/andrea993/audioeqpro/master/pulsemodule/makefile.patch -O patch3
-  patch -pq < patch3
+  patch -p1 < patch3
   ```
 
 - Copy the module source in the directory
@@ -60,7 +60,7 @@ To use the module load it with pactl then set it as default sink, for example:
 pactl load-module module-eqpro-sink par="(1;1;1;1;0;0)" db=15
 pactl set-default-sink $(SINKNUMBER)
 ```
-Use `pactl set-default-sink` to find the sink number.
+Use `pactl list sink` to find the sink number.
   
 Possible arguments:
 ```
