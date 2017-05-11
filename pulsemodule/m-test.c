@@ -55,7 +55,7 @@ PA_MODULE_USAGE(
 			"use_volume_sharing=<yes or no> "
 			"force_flat_volume=<yes or no> "
 			"db=<filter gain in decibel>"
-			"f0=<last frequecy of the first band> "
+			"fmin=<central frequecy of the first band> "
 			"octave=<octaves between bands> "
 			"Nbands=<number of bands>"
 			"par=<equalizer levels in the form (x1;x2;...;xn) from -1 to 1>"
@@ -65,7 +65,7 @@ PA_MODULE_USAGE(
 #define MEMBLOCKQ_MAXLENGTH (16*1024*1024)
 #define M 2
 #define M2 4
-#define DEFAULT_F0 30.0
+#define DEFAULT_FMIN 30.0
 #define DEFAULT_OCT 1.0
 #define DEFAULT_DB 12.0
 
@@ -98,7 +98,7 @@ struct userdata {
 
 static const char* const valid_modargs[] = {
 	"db",
-	"f0",
+	"fmin",
 	"Nbands",
 	"octave",
 	"par",
@@ -117,7 +117,7 @@ static const char* const valid_modargs[] = {
 void eq_preproccesing(equalizerPar *eqp, double SR);
 void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, double oct, int N, double *par);
 double eq_filter(double u, double par[], double **c, double **x, int N);
-void calcArgs(bool isf0, bool isNbands, double *f0, unsigned *Nbands, double *octave, double FN);
+void calcArgs(bool isfmin, bool isNbands, double *fmin, unsigned *Nbands, double *octave, double FN);
 int readParFromStr(char *str, unsigned N, double *out);
 
 /* Called from I/O thread context */
@@ -531,11 +531,11 @@ int pa__init(pa_module*m) {
 	bool use_volume_sharing = true;
 	bool force_flat_volume = false;
 	pa_memchunk silence;
-	double f0=DEFAULT_F0, octave=DEFAULT_OCT, db=DEFAULT_DB;
+	double fmin=DEFAULT_FMIN, octave=DEFAULT_OCT, db=DEFAULT_DB;
 	unsigned Nbands;
 	double* par=NULL;
 	char *str=NULL;
-	bool isf0=false, isNbands=false, isoctave=false;
+	bool isfmin=false, isNbands=false, isoctave=false;
 	int ret;
 
 	pa_assert(m);
@@ -576,17 +576,17 @@ int pa__init(pa_module*m) {
 		goto fail;
 	}
 
-	ret=pa_modargs_get_value_double(ma, "f0", &f0); 
+	ret=pa_modargs_get_value_double(ma, "fmin", &fmin); 
 	if (ret < 0) {
-		pa_log("f0= expects a double argument");
+		pa_log("fmin= expects a double argument");
 		goto fail;
 	}
-	if (ret > 0 && (f0 <= 0 || f0>=ss.rate/2.0)) { 
-		pa_log("f0= expects a positive double less than (sampling rate)/2"); 
+	if (ret > 0 && (fmin <= 0 || fmin>=ss.rate/2.0)) { 
+		pa_log("fmin= expects a positive double less than (sampling rate)/2"); 
 		goto fail;
 	}
 	if (ret > 0)
-		isf0=true;
+		isfmin=true;
 
 	ret=pa_modargs_get_value_double(ma, "octave", &octave);
 	if (ret < 0) {
@@ -609,11 +609,11 @@ int pa__init(pa_module*m) {
 	if (ret > 0)
 		isNbands=true;
 
-	if (isoctave && isNbands && isf0) {
-		pa_log("You can choose up to two arguments between: octave, Nbands, f0");
+	if (isoctave && isNbands && isfmin) {
+		pa_log("You can choose up to two arguments between: octave, Nbands, fmin");
 		goto fail;
 	}
-	calcArgs(isf0, isNbands, &f0, &Nbands, &octave, ss.rate/2.0);
+	calcArgs(isfmin, isNbands, &fmin, &Nbands, &octave, ss.rate/2.0);
 
 	par=pa_xmalloc0(Nbands*sizeof(double));
 	if ((str=pa_xstrdup(pa_modargs_get_value(ma, "par", NULL)))) {
@@ -722,7 +722,7 @@ int pa__init(pa_module*m) {
 	pa_memblock_unref(silence.memblock);
 
 	//init eq
-	eq_init(&u->eqp,db,f0,u->channels,octave,(int)Nbands,par);
+	eq_init(&u->eqp,db,fmin,u->channels,octave,(int)Nbands,par);
 	eq_preproccesing(&u->eqp,ss.rate);
 
 	pa_sink_put(u->sink);
@@ -909,22 +909,22 @@ void eq_preproccesing(equalizerPar *eqp, double SR)
 	}
 }
 
-void calcArgs(bool isf0, bool isNbands, double *f0, unsigned *Nbands, double *octave, double FN)
+void calcArgs(bool isfmin, bool isNbands, double *fmin, unsigned *Nbands, double *octave, double FN)
 {
 	double R;
 
-	if (isf0 && isNbands){
-		R=pow(FN / *f0, 1.0 / *Nbands);
+	if (isfmin && isNbands){
+		R=pow(FN / *fmin, 1.0 / *Nbands);
 		*octave=log(R)/log(2);
 		return;
 	}
 	if (isNbands){
 		R=pow(2,*octave);
-		*f0=FN/pow(R,*Nbands);
+		*fmin=FN/pow(R,*Nbands);
 		return;
 	}
 	R=pow(2,*octave);
-	*Nbands=floor(log(FN/ *f0)/log(R));
+	*Nbands=floor(log(FN/ *fmin)/log(R));
 
 }
 
@@ -950,7 +950,7 @@ int readParFromStr(char *str, unsigned N, double *out)
 			return -1;
 
 		s=end;
-		if((*s!=';' && *(s+1)!='\0') || (*s!=')' && *(s+1)=='\0') || *s=='\0')
+		if(*s=='\0' || (*s!=';' && *(s+1)!='\0') || (*s!=')' && *(s+1)=='\0')) 
 			return -1;
 
 		s++;
