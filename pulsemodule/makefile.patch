@@ -1,5 +1,5 @@
 --- Makefile.am	2017-05-11 15:40:15.139057943 +0200
-+++ ../../pulseaudio/src/Makefile.am	2017-05-11 15:03:01.725981111 +0200
++++ ./Makefile.am	2017-05-11 15:03:01.725981111 +0200
 @@ -1215,6 +1215,7 @@
  		module-role-cork.la \
  		module-loopback.la \
