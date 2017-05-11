@@ -1,14 +1,15 @@
-MOD_OBJ_OUT=module-test.o
-MOD_OBJ_OUT_DBG=module-test-dbg.o
-MOD_SO_OUT=module-test.so
-MOD_SO_OUT_DBG=module-test-dbg.so
+MOD_OBJ_OUT=m-test.o
+MOD_OBJ_OUT_DBG=m-test-dbg.o
+MOD_SO_OUT=m-test.so
+MOD_SO_OUT_DBG=m-test-dbg.so
 CC=gcc
+DEF=-DHAVE_CONFIG_H -DPA_SINK_SHARE_VOLUME_WITH_MASTER=0
 CFLAGS_LINKSTEP=-shared -lm -lpulse -o $(MOD_SO_OUT)
-CFLAGS=-Wall -Wextra -fPIC -O2 -g -c -o $(MOD_OBJ_OUT)
-SRC=module-test.c
+CFLAGS=-Wall -Wextra -fPIC -O2 -g -c $(DEF) -o $(MOD_OBJ_OUT) 
+SRC=m-test.c
 
 dbg:CFLAGS_LINKSTEP=-shared -lm -lpulse -o $(MOD_SO_OUT_DBG)
-dbg:CFLAGS=-Wall -Wextra -fPIC -O0 -g -c -DEQPRO_DEBUG -o $(MOD_OBJ_OUT_DBG)
+dbg:CFLAGS=-Wall -Wextra -fPIC -O0 -g -c -DEQPRO_DEBUG $(DEF) -o $(MOD_OBJ_OUT_DBG) 
 all:build
 
 build:

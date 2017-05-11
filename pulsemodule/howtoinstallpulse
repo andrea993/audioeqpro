@@ -1,0 +1,32 @@
+
+git clone git://anongit.freedesktop.org/pulseaudio/pulseaudio
+cd pulseaudio
+
+./autogen.sh --prefix=/usr \
+                                              --sysconfdir=/etc \
+                                              --libexecdir=/usr/lib \
+                                              --localstatedir=/var \
+                                              --with-udev-rules-dir=/usr/lib/udev/rules.d \
+                                              --with-database=tdb \
+                                              --disable-hal-compat \
+                                              --disable-tcpwrap \
+                                              --disable-bluez4 \
+                                              --disable-rpath \
+                                              --disable-default-build-tests
+
+
+wget https://patchwork.freedesktop.org/patch/155160/raw/
+wget https://patchwork.freedesktop.org/patch/154921/raw/
+
+patch -p1 < index.html
+patch -p1 < index.html.1
+
+make
+
+vim src/client.conf (to set autospawn=no and remove ";")
+
+
+sudo make install bashcompletiondir=/usr/share/bash-completion/completions/
+
+pulseaudio -vvvv
+
