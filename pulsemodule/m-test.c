@@ -1,8 +1,7 @@
 /***
-  This file is part of PulseAudio.
+This file is part of PulseAudio.
 
-  Copyright 2010 Intel Corporation
-Contributor: Pierre-Louis Bossart <pierre-louis.bossart@intel.com>
+Copyright 2017 Andrea Drius <andrea993 dot nokiastore at gmail dot com>
 
 PulseAudio is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published
@@ -40,13 +39,11 @@ along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
 #include <ctype.h>
 #include "m-test.h"
 
-#define M 2
-#define M2 4
 
 
 PA_MODULE_AUTHOR("Andrea Drius");
-PA_MODULE_DESCRIPTION("equalizer");
-PA_MODULE_VERSION("v0.00.001-alpha");
+PA_MODULE_DESCRIPTION("Professional customizable equalizer");
+PA_MODULE_VERSION("v0.00.1-beta");
 PA_MODULE_LOAD_ONCE(false);
 PA_MODULE_USAGE(
 		_("sink_name=<name for the sink> "
@@ -57,6 +54,7 @@ PA_MODULE_USAGE(
 			"channel_map=<channel map> "
 			"use_volume_sharing=<yes or no> "
 			"force_flat_volume=<yes or no> "
+			"db=<filter gain in decibel>"
 			"f0=<last frequecy of the first band> "
 			"octave=<octaves between bands> "
 			"Nbands=<number of bands>"
@@ -65,6 +63,11 @@ PA_MODULE_USAGE(
 		 ));
 
 #define MEMBLOCKQ_MAXLENGTH (16*1024*1024)
+#define M 2
+#define M2 4
+#define DEFAULT_F0 30.0
+#define DEFAULT_OCT 1.0
+#define DEFAULT_DB 12.0
 
 typedef struct __equalizerPar
 {
@@ -94,6 +97,7 @@ struct userdata {
 };
 
 static const char* const valid_modargs[] = {
+	"db",
 	"f0",
 	"Nbands",
 	"octave",
@@ -113,7 +117,7 @@ static const char* const valid_modargs[] = {
 void eq_preproccesing(equalizerPar *eqp, double SR);
 void eq_init(equalizerPar *eqp, double db, double f_min,int nChans, double oct, int N, double *par);
 double eq_filter(double u, double par[], double **c, double **x, int N);
-void calcArgs(bool isf0, bool isNbands, bool isoctave, double *f0, unsigned *Nbands, double *octave, double FN);
+void calcArgs(bool isf0, bool isNbands, double *f0, unsigned *Nbands, double *octave, double FN);
 int readParFromStr(char *str, unsigned N, double *out);
 
 /* Called from I/O thread context */
@@ -297,7 +301,6 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes, pa_memchunk *chunk
 			src++;
 			dst++;
 		}
-
 		n--;
 	}
 
@@ -528,11 +531,10 @@ int pa__init(pa_module*m) {
 	bool use_volume_sharing = true;
 	bool force_flat_volume = false;
 	pa_memchunk silence;
-	double f0=30, octave=1;
+	double f0=DEFAULT_F0, octave=DEFAULT_OCT, db=DEFAULT_DB;
 	unsigned Nbands;
 	double* par=NULL;
 	char *str=NULL;
-	double db=12; //not need
 	bool isf0=false, isNbands=false, isoctave=false;
 	int ret;
 
@@ -568,13 +570,19 @@ int pa__init(pa_module*m) {
 		goto fail;
 	} 
 
+	ret=pa_modargs_get_value_double(ma, "db", &db);
+	if (ret < 0) {
+		pa_log("db= expects a double argument");
+		goto fail;
+	}
+
 	ret=pa_modargs_get_value_double(ma, "f0", &f0); 
 	if (ret < 0) {
 		pa_log("f0= expects a double argument");
 		goto fail;
 	}
 	if (ret > 0 && (f0 <= 0 || f0>=ss.rate/2.0)) { 
-		pa_log("f0= expects a positive double less than rate/2"); 
+		pa_log("f0= expects a positive double less than (sampling rate)/2"); 
 		goto fail;
 	}
 	if (ret > 0)
@@ -605,7 +613,7 @@ int pa__init(pa_module*m) {
 		pa_log("You can choose up to two arguments between: octave, Nbands, f0");
 		goto fail;
 	}
-	calcArgs(isf0, isNbands, isoctave, &f0, &Nbands, &octave, ss.rate/2.0);
+	calcArgs(isf0, isNbands, &f0, &Nbands, &octave, ss.rate/2.0);
 
 	par=pa_xmalloc0(Nbands*sizeof(double));
 	if ((str=pa_xstrdup(pa_modargs_get_value(ma, "par", NULL)))) {
@@ -901,7 +909,7 @@ void eq_preproccesing(equalizerPar *eqp, double SR)
 	}
 }
 
-void calcArgs(bool isf0, bool isNbands, bool isoctave, double *f0, unsigned *Nbands, double *octave, double FN)
+void calcArgs(bool isf0, bool isNbands, double *f0, unsigned *Nbands, double *octave, double FN)
 {
 	double R;
 
@@ -910,7 +918,7 @@ void calcArgs(bool isf0, bool isNbands, bool isoctave, double *f0, unsigned *Nba
 		*octave=log(R)/log(2);
 		return;
 	}
-	if (isoctave && isNbands){
+	if (isNbands){
 		R=pow(2,*octave);
 		*f0=FN/pow(R,*Nbands);
 		return;
@@ -942,7 +950,7 @@ int readParFromStr(char *str, unsigned N, double *out)
 			return -1;
 
 		s=end;
-		if((*s!=';' && *(s+1)!='\0') || (*s!=')' && *(s+1)=='\0'))
+		if((*s!=';' && *(s+1)!='\0') || (*s!=')' && *(s+1)=='\0') || *s=='\0')
 			return -1;
 
 		s++;
