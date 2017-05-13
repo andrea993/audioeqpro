@@ -1,7 +1,7 @@
 # Pulseaudio module 
 This implemenation of the equalizer in a pulseadudio module allow you to use my algorithm in your devices that support pulseaudio.
 
-To install this module you'll have to build the latest version of pulseaudio sources and add the equalizer in the tree, to do so you can easily follow the instructios below.
+To install this module you'll have to build the latest version of pulseaudio sources and add the equalizer in the tree, to do so you can easily follow the instructions below.
 
 ## Installation
 - Make sure you don't have any pulseaudio packages installed, check your packages manager 
