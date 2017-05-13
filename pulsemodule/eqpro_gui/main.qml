@@ -1,0 +1,23 @@
+import QtQuick 2.7
+import QtQuick.Controls 2.0
+import QtQuick.Layouts 1.0
+
+ApplicationWindow {
+    visible: true
+    width: 640
+    height: 480
+    title: qsTr("EqualizerPro")
+
+
+    Page1Form {
+        id: page_form
+        anchors.fill: parent
+        objectName: "page_form"
+
+    }
+
+
+
+
+
+}
