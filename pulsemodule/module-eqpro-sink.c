@@ -1,20 +1,20 @@
 /***
-This file is part of PulseAudio.
+  This file is part of PulseAudio.
 
-Copyright 2017 Andrea Drius <andrea993 dot nokiastore at gmail dot com>
+  Copyright 2017 Andrea Drius <andrea993 dot nokiastore at gmail dot com>
 
-PulseAudio is free software; you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published
-by the Free Software Foundation; either version 2.1 of the License,
-or (at your option) any later version.
+  PulseAudio is free software; you can redistribute it and/or modify
+  it under the terms of the GNU Lesser General Public License as published
+  by the Free Software Foundation; either version 2.1 of the License,
+  or (at your option) any later version.
 
-PulseAudio is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-General Public License for more details.
+  PulseAudio is distributed in the hope that it will be useful, but
+  WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+  General Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public License
-along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU Lesser General Public License
+  along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
  ***/
 
 #ifdef HAVE_CONFIG_H
@@ -149,15 +149,15 @@ static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t of
 			return 0;
 
 		case PA_SINK_MESSAGE_SET_STATE: {
-		  pa_sink_state_t new_state = (pa_sink_state_t) PA_PTR_TO_UINT(data);
+													  pa_sink_state_t new_state = (pa_sink_state_t) PA_PTR_TO_UINT(data);
 
-		  /* When set to running or idle for the first time, request a rewind
-				* of the master sink to make sure we are heard immediately */
-			  if ((new_state == PA_SINK_IDLE || new_state == PA_SINK_RUNNING) && u->sink->thread_info.state == PA_SINK_INIT) {
-				  pa_log_debug("Requesting rewind due to state change.");
-				  pa_sink_input_request_rewind(u->sink_input, 0, false, true, true);
-			  }
-		  }
+													  /* When set to running or idle for the first time, request a rewind
+														* of the master sink to make sure we are heard immediately */
+													  if ((new_state == PA_SINK_IDLE || new_state == PA_SINK_RUNNING) && u->sink->thread_info.state == PA_SINK_INIT) {
+														  pa_log_debug("Requesting rewind due to state change.");
+														  pa_sink_input_request_rewind(u->sink_input, 0, false, true, true);
+													  }
+												  }
 	}
 
 	return pa_sink_process_msg(o, code, data, offset, chunk);
@@ -329,6 +329,10 @@ static void sink_input_process_rewind_cb(pa_sink_input *i, size_t nbytes) {
 	pa_sink_input_assert_ref(i);
 	pa_assert_se(u = i->userdata);
 
+	/* If the sink is not yet linked, there is nothing to rewind */
+	if (!PA_SINK_IS_LINKED(u->sink->thread_info.state))
+		return;
+
 	if (u->sink->thread_info.rewind_nbytes > 0) {
 		size_t max_rewrite;
 
@@ -404,7 +408,8 @@ static void sink_input_detach_cb(pa_sink_input *i) {
 	pa_sink_input_assert_ref(i);
 	pa_assert_se(u = i->userdata);
 
-	pa_sink_detach_within_thread(u->sink);
+	if (PA_SINK_IS_LINKED(u->sink->thread_info.state))
+		pa_sink_detach_within_thread(u->sink);
 
 	pa_sink_set_rtpoll(u->sink, NULL);
 }
@@ -432,7 +437,9 @@ static void sink_input_attach_cb(pa_sink_input *i) {
 	 * https://bugs.freedesktop.org/show_bug.cgi?id=53709 */
 	pa_sink_set_max_rewind_within_thread(u->sink, pa_sink_input_get_max_rewind(i));
 
-	pa_sink_attach_within_thread(u->sink);
+	if (PA_SINK_IS_LINKED(u->sink->thread_info.state))
+		pa_sink_attach_within_thread(u->sink);
+
 }
 
 /* Called from main context */
@@ -442,11 +449,12 @@ static void sink_input_kill_cb(pa_sink_input *i) {
 	pa_sink_input_assert_ref(i);
 	pa_assert_se(u = i->userdata);
 
-	/* The order here matters! We first kill the sink input, followed
-	 * by the sink. That means the sink callbacks must be protected
-	 * against an unconnected sink input! */
-	pa_sink_input_unlink(u->sink_input);
+	/* The order here matters! We first kill the sink so that streams
+	 * can properly be moved away while the sink input is still conneted
+	 * to the master. */
+	pa_sink_input_cork(u->sink_input, true);
 	pa_sink_unlink(u->sink);
+	pa_sink_input_unlink(u->sink_input);
 
 	pa_sink_input_unref(u->sink_input);
 	u->sink_input = NULL;
@@ -455,22 +463,6 @@ static void sink_input_kill_cb(pa_sink_input *i) {
 	u->sink = NULL;
 
 	pa_module_unload_request(u->module, true);
-}
-
-/* Called from IO thread context */
-static void sink_input_state_change_cb(pa_sink_input *i, pa_sink_input_state_t state) {
-	struct userdata *u;
-
-	pa_sink_input_assert_ref(i);
-	pa_assert_se(u = i->userdata);
-
-	/* If we are added for the first time, ask for a rewinding so that
-	 * we are heard right-away. */
-	if (PA_SINK_INPUT_IS_LINKED(state) &&
-			i->thread_info.state == PA_SINK_INPUT_INIT && i->sink) {
-		pa_log_debug("Requesting rewind due to state change.");
-		pa_sink_input_request_rewind(i, 0, false, true, true);
-	}
 }
 
 /* Called from main context */
@@ -693,7 +685,7 @@ int pa__init(pa_module*m) {
 	pa_proplist_sets(sink_input_data.proplist, PA_PROP_MEDIA_ROLE, "filter");
 	pa_sink_input_new_data_set_sample_spec(&sink_input_data, &ss);
 	pa_sink_input_new_data_set_channel_map(&sink_input_data, &map);
-
+	sink_input_data.flags |= PA_SINK_INPUT_START_CORKED;
 	pa_sink_input_new(&u->sink_input, m->core, &sink_input_data);
 	pa_sink_input_new_data_done(&sink_input_data);
 
@@ -709,7 +701,6 @@ int pa__init(pa_module*m) {
 	u->sink_input->kill = sink_input_kill_cb;
 	u->sink_input->attach = sink_input_attach_cb;
 	u->sink_input->detach = sink_input_detach_cb;
-	u->sink_input->state_change = sink_input_state_change_cb;
 	u->sink_input->moving = sink_input_moving_cb;
 	u->sink_input->volume_changed = use_volume_sharing ? NULL : sink_input_volume_changed_cb;
 	u->sink_input->mute_changed = sink_input_mute_changed_cb;
@@ -725,8 +716,13 @@ int pa__init(pa_module*m) {
 	eq_init(&u->eqp,db,fmin,u->channels,octave,(int)Nbands,par);
 	eq_preproccesing(&u->eqp,ss.rate);
 
-	pa_sink_put(u->sink);
+	/* The order here is important. The input must be put first,
+	 * otherwise streams might attach to the sink before the sink
+	 * input is attached to the master. */
+
 	pa_sink_input_put(u->sink_input);
+	pa_sink_put(u->sink);
+	pa_sink_input_cork(u->sink_input, false);
 
 	pa_modargs_free(ma);
 	if (str)
@@ -769,10 +765,13 @@ void pa__done(pa_module*m) {
 	 * destruction order! */
 
 	if (u->sink_input)
-		pa_sink_input_unlink(u->sink_input);
+		pa_sink_input_cork(u->sink_input, true);
 
 	if (u->sink)
 		pa_sink_unlink(u->sink);
+
+	if (u->sink_input)
+		pa_sink_input_unlink(u->sink_input);
 
 	if (u->sink_input)
 		pa_sink_input_unref(u->sink_input);
