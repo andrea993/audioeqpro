@@ -1,30 +1,22 @@
---- Makefile.am	2017-05-11 15:40:15.139057943 +0200
-+++ ./Makefile.am	2017-05-11 15:03:01.725981111 +0200
-@@ -1215,6 +1215,7 @@
+--- Makefile.am	2018-04-26 22:26:54.027843772 +0200
++++ old	2018-04-26 22:48:09.531440517 +0200
+@@ -1223,7 +1223,6 @@
  		module-role-cork.la \
  		module-loopback.la \
  		module-virtual-sink.la \
-+		module-eqpro-sink.la \
+-		module-eqpro-sink.la \
  		module-virtual-source.la \
  		module-virtual-surround-sink.la \
  		module-switch-on-connect.la \
-@@ -1553,6 +1554,7 @@
- 		module-dbus-protocol-symdef.h \
- 		module-loopback-symdef.h \
- 		module-virtual-sink-symdef.h \
-+		module-eqpro-sink-symdef.h \
- 		module-virtual-source-symdef.h \
- 		module-virtual-surround-sink-symdef.h \
- 		module-switch-on-connect-symdef.h \
-@@ -1789,6 +1791,11 @@
+@@ -1726,11 +1725,6 @@
  module_virtual_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
  module_virtual_sink_la_LIBADD = $(MODULE_LIBADD)
  
-+module_eqpro_sink_la_SOURCES = modules/module-eqpro-sink.c
-+module_eqpro_sink_la_CFLAGS = $(AM_CFLAGS) $(SERVER_CFLAGS)
-+module_eqpro_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
-+module_eqpro_sink_la_LIBADD = $(MODULE_LIBADD)
-+
+-module_eqpro_sink_la_SOURCES = modules/module-eqpro-sink.c
+-module_eqpro_sink_la_CFLAGS = $(AM_CFLAGS) $(SERVER_CFLAGS) -DPA_MODULE_NAME=module_eqpro_sink
+-module_eqpro_sink_la_LDFLAGS = $(MODULE_LDFLAGS)
+-module_eqpro_sink_la_LIBADD = $(MODULE_LIBADD)
+-
  module_virtual_source_la_SOURCES = modules/module-virtual-source.c
- module_virtual_source_la_CFLAGS = $(AM_CFLAGS) $(SERVER_CFLAGS)
+ module_virtual_source_la_CFLAGS = $(AM_CFLAGS) $(SERVER_CFLAGS) -DPA_MODULE_NAME=module_virtual_source
  module_virtual_source_la_LDFLAGS = $(MODULE_LDFLAGS)

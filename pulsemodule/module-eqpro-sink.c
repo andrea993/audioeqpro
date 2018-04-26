@@ -37,7 +37,7 @@
 #include <math.h>
 #include <string.h>
 #include <ctype.h>
-#include "module-eqpro-sink-symdef.h"
+//#include "module-eqpro-sink-symdef.h"
 
 
 
@@ -164,18 +164,35 @@ static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t of
 }
 
 /* Called from main context */
-static int sink_set_state_cb(pa_sink *s, pa_sink_state_t state) {
-	struct userdata *u;
+static int sink_set_state_in_main_thread_cb(pa_sink *s, pa_sink_state_t state, pa_suspend_cause_t suspend_cause) {
+    struct userdata *u;
 
-	pa_sink_assert_ref(s);
-	pa_assert_se(u = s->userdata);
+    pa_sink_assert_ref(s);
+    pa_assert_se(u = s->userdata);
 
-	if (!PA_SINK_IS_LINKED(state) ||
-			!PA_SINK_INPUT_IS_LINKED(pa_sink_input_get_state(u->sink_input)))
-		return 0;
+    if (!PA_SINK_IS_LINKED(state) ||
+        !PA_SINK_INPUT_IS_LINKED(pa_sink_input_get_state(u->sink_input)))
+        return 0;
 
-	pa_sink_input_cork(u->sink_input, state == PA_SINK_SUSPENDED);
-	return 0;
+    pa_sink_input_cork(u->sink_input, state == PA_SINK_SUSPENDED);
+    return 0;
+}
+
+/* Called from the IO thread. */
+static int sink_set_state_in_io_thread_cb(pa_sink *s, pa_sink_state_t new_state, pa_suspend_cause_t new_suspend_cause) {
+    struct userdata *u;
+
+    pa_assert(s);
+    pa_assert_se(u = s->userdata);
+
+    /* When set to running or idle for the first time, request a rewind
+     * of the master sink to make sure we are heard immediately */
+    if ((new_state == PA_SINK_IDLE || new_state == PA_SINK_RUNNING) && u->sink->thread_info.state == PA_SINK_INIT) {
+        pa_log_debug("Requesting rewind due to state change.");
+        pa_sink_input_request_rewind(u->sink_input, 0, false, true, true);
+    }
+
+    return 0;
 }
 
 /* Called from I/O thread context */
@@ -660,7 +677,8 @@ int pa__init(pa_module*m) {
 	}
 
 	u->sink->parent.process_msg = sink_process_msg_cb;
-	u->sink->set_state = sink_set_state_cb;
+   u->sink->set_state_in_main_thread = sink_set_state_in_main_thread_cb;
+   u->sink->set_state_in_io_thread = sink_set_state_in_io_thread_cb;
 	u->sink->update_requested_latency = sink_update_requested_latency_cb;
 	u->sink->request_rewind = sink_request_rewind_cb;
 	pa_sink_set_set_mute_callback(u->sink, sink_set_mute_cb);
@@ -679,7 +697,7 @@ int pa__init(pa_module*m) {
 	pa_sink_input_new_data_init(&sink_input_data);
 	sink_input_data.driver = __FILE__;
 	sink_input_data.module = m;
-	pa_sink_input_new_data_set_sink(&sink_input_data, master, false);
+	pa_sink_input_new_data_set_sink(&sink_input_data, master, false, true);
 	sink_input_data.origin_sink = u->sink;
 	pa_proplist_setf(sink_input_data.proplist, PA_PROP_MEDIA_NAME, "Virtual Sink Stream from %s", pa_proplist_gets(u->sink->proplist, PA_PROP_DEVICE_DESCRIPTION));
 	pa_proplist_sets(sink_input_data.proplist, PA_PROP_MEDIA_ROLE, "filter");

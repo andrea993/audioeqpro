@@ -1,5 +1,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+
+
+
 #include "guimanager.h"
 
 int main(int argc, char *argv[])
@@ -12,13 +15,13 @@ int main(int argc, char *argv[])
 
     engine.load(QUrl(QLatin1String("qrc:/main.qml")));
 
-     QObject *rootObject = engine.rootObjects().first();
+    QObject *rootObject = engine.rootObjects().first();
 
 
     QObject *sliderRow=rootObject->findChild<QObject*>("slidersRow");
 
     GuiManager gm(sliderRow);
-    QObject::connect(sliderRow, SIGNAL(sliderChange(int,double)),&gm, SLOT(sliderChanged(int,double)));
+    QObject::connect(sliderRow, SIGNAL(sliderChange(double,int)),&gm, SLOT(sliderChanged(double,int)));
 
 
 

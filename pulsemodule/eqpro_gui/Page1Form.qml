@@ -48,11 +48,15 @@ Item {
                 property double oct: 0.5
                 property double sR: 44100;
 
-
+                signal sliderChange(double val, int idx)
 
 
                 Component.onCompleted: {
                     redrawSlider();
+                }
+
+                function inSliderChanged(val,idx) {
+                    sliderChange(val, idx)
                 }
 
                 function redrawSlider() {
@@ -65,17 +69,18 @@ Item {
 
                     var sli=Qt.createComponent("Eqpro_slider.qml");
                     var R=Math.pow(2,oct);
-                     var n=Math.round(Math.log(sR/2/fmin)/Math.log(R));
+                    var n=Math.round(Math.log(sR/2.0/fmin)/Math.log(R));
                     nBands=n;
                     var fmax=fmin*Math.pow(R,nBands-1);
                     for (i=0; i<n; i++) {
                         var f=Math.round(Math.exp(Math.log(fmin)+Math.log(fmax / fmin)*i/(nBands-1)))
-                        sli.createObject(slidersRow,{
+                        var sli_i=sli.createObject(slidersRow,{
                                                 "id": "slider_"+i,
                                                 "Layout.alignment": Qt.AlignHCenter | Qt.AlignVCenter,
-                                                "freq": f
+                                                "freq": f,
+                                                "sliderIdx": i
                                             });
-
+                        sli_i.inSliderChange.connect(slidersRow.inSliderChanged);
                     }
 
 

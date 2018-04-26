@@ -2,6 +2,9 @@
 #define GUIMANAGER_H
 
 #include <QObject>
+#include <QtDebug>
+
+//#define EQGUI_DEBUG
 
 class GuiManager : public QObject
 {
@@ -24,8 +27,11 @@ signals:
 
 
 public slots:
-    void sliderChanged(int s, double val)
+    void sliderChanged(double val, int idx)
     {
+#ifdef EQGUI_DEBUG
+        qDebug()<<"slider "<<idx<<" change to "<<val;
+#endif
 
     }
 

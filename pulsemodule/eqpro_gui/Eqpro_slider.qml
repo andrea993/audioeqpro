@@ -8,27 +8,29 @@ Item {
     Layout.fillWidth: true
 
     property double freq: 0.0
+    property int sliderIdx: 0
+
+    signal inSliderChange(double val, int idx);
 
         ColumnLayout {
             id: columnLayout
             anchors.fill: parent
-            property int freq
+            //property int freq
 
             Slider {
                 id: slider
                 clip: false
                 from: -1
+                to: 1
                 Layout.fillHeight: true
                 Layout.fillWidth: true
                 orientation: Qt.Vertical
                 value: 0
 
-                signal inSliderChange(double val);
+
                 onValueChanged: {
                      textF.text=value.toFixed(3).toString();
-                     slider.inSliderChange(value);
-
-
+                     inSliderChange(value, sliderIdx);
                 }
 
             }

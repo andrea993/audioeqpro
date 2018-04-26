@@ -16,15 +16,9 @@ To install this module you'll have to build the latest version of pulseaudio sou
   git clone git://anongit.freedesktop.org/pulseaudio/pulseaudio
   ```
   
-- Download and install these patches
+- Download and install this patch
   ```
-  cd pulseaudio
-  wget https://patchwork.freedesktop.org/patch/155160/raw/ -O patch1
-  wget https://patchwork.freedesktop.org/patch/154921/raw/ -O patch2
-  patch -p1 < patch1
-  patch -p1 < patch2
-  
-  cd src
+  cd pulseaudio/src
   wget https://raw.githubusercontent.com/andrea993/audioeqpro/master/pulsemodule/makefile.patch -O patch3
   patch -p1 < patch3
   ```
@@ -60,7 +54,7 @@ To use this module just load it with pactl then set it as default sink, for exam
 pactl load-module module-eqpro-sink par="(1;1;1;1;0;0)" db=15
 pactl set-default-sink $(SINKNUMBER)
 ```
-Use `pactl list sink` to find the sink number.
+Use `pactl list sinkis` to find the sink number.
   
 Possible arguments:
 ```
