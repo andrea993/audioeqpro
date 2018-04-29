@@ -24,14 +24,14 @@ To install this module you'll have to build the latest version of pulseaudio sou
   
 - Download and install this patch
   ```
-  cd pulseaudio/src
+  cd pulseaudio
   wget https://raw.githubusercontent.com/andrea993/audioeqpro/master/pulsemodule/makefile.patch -O makefile.patch
   patch -p1 < makefile.patch
   ```
 
 - Copy the module sources in the directory
   ```
-  cd modules
+  cd src/modules
   wget https://raw.githubusercontent.com/andrea993/audioeqpro/master/pulsemodule/module-eqpro-sink.c
   ```
 - Return to main pulseaudio directory and install
