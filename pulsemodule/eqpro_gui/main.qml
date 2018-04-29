@@ -1,22 +1,24 @@
 import QtQuick 2.7
+import QtQuick.Window 2.3
 import QtQuick.Controls 2.0
 import QtQuick.Layouts 1.0
 
-ApplicationWindow {
+Window {
+    id: mainWindow
+    objectName: "mainWindow"
     visible: true
+
     width: 640
     height: 480
     title: qsTr("EqualizerPro")
 
+    Loader {
+        id: pageloader
+        objectName: "pageloader"
 
-    Page1Form {
-        id: page_form
+        source: "Page1Form.qml"
         anchors.fill: parent
-        objectName: "page_form"
-
     }
-
-
 
 
 

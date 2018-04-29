@@ -5,11 +5,11 @@ MOD_SO_OUT_DBG=mmodule-eqpro-sink-dbg.so
 CC=gcc
 DEF=-DHAVE_CONFIG_H -DPA_SINK_SHARE_VOLUME_WITH_MASTER=0
 CFLAGS_LINKSTEP=-shared -lm -lpulse -o $(MOD_SO_OUT)
-CFLAGS=-Wall -Wextra -fPIC -O2 -g -c $(DEF) -o $(MOD_OBJ_OUT) 
+CFLAGS=-Wall -fPIC -O2 -g -c $(DEF) -o $(MOD_OBJ_OUT) 
 SRC=module-eqpro-sink.c
 
 dbg:CFLAGS_LINKSTEP=-shared -lm -lpulse -o $(MOD_SO_OUT_DBG)
-dbg:CFLAGS=-Wall -Wextra -fPIC -O0 -g -c -DEQPRO_DEBUG $(DEF) -o $(MOD_OBJ_OUT_DBG) 
+dbg:CFLAGS=-Wall -fPIC -O0 -g -c -DEQPRO_DEBUG $(DEF) -o $(MOD_OBJ_OUT_DBG) 
 all:build
 
 build:

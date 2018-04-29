@@ -4,11 +4,13 @@ import QtQuick.Layouts 1.0
 
 Item {
 
+
     Layout.fillHeight: true
     Layout.fillWidth: true
 
     property double freq: 0.0
     property int sliderIdx: 0
+    property alias val: slider.value
 
     signal inSliderChange(double val, int idx);
 
@@ -59,9 +61,6 @@ Item {
 
 
             property alias value: slider.value
-
-
-
 
         }
 

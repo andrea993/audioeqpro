@@ -4,5 +4,7 @@
         <file>Page1Form.qml</file>
         <file>qtquickcontrols2.conf</file>
         <file>Eqpro_slider.qml</file>
+        <file>Page0CheckModuleForm.qml</file>
+        <file>Page05SelectConnection.qml</file>
     </qresource>
 </RCC>

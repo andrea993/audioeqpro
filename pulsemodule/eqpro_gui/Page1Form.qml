@@ -4,8 +4,13 @@ import QtQuick.Layouts 1.0
 
 Item {
 
-    id: page_form
+    id: page1
+    objectName: "page1"
 
+    signal dialChange(double val);
+
+    property bool presetIsChanging: false
+    property alias dialvalue: dial.value
 
     ColumnLayout {
         anchors.fill: parent
@@ -26,12 +31,8 @@ Item {
                 anchors.right:  flickable.right
                 anchors.bottom: flickable.bottom
 
-
-
             }
             flickableDirection: Flickable.HorizontalFlick
-
-
 
 
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
@@ -40,26 +41,27 @@ Item {
                 id: slidersRow
 
                 height: parent.height
-                width: page_form.width/10*nBands
+                width: page1.width/10*nBands
 
-
-                property int nBands
-                property double fmin: 30.0
-                property double oct: 0.5
-                property double sR: 44100;
+                property int nBands: 10
+                property double fmin: 1000.0
+                property double dB: 12
+                property double r: 0.25;
 
                 signal sliderChange(double val, int idx)
 
-
                 Component.onCompleted: {
-                    redrawSlider();
+                    //redrawSlider();
                 }
 
                 function inSliderChanged(val,idx) {
                     sliderChange(val, idx)
+
+                    if(!presetIsChanging)
+                        comboBoxPresets.currentIndex=0;
                 }
 
-                function redrawSlider() {
+                function redrawSlider(par) {
                     var i;
 
                     for (i=0; i<slidersRow.children.length; i++) {
@@ -68,24 +70,21 @@ Item {
                     }
 
                     var sli=Qt.createComponent("Eqpro_slider.qml");
-                    var R=Math.pow(2,oct);
-                    var n=Math.round(Math.log(sR/2.0/fmin)/Math.log(R));
-                    nBands=n;
-                    var fmax=fmin*Math.pow(R,nBands-1);
-                    for (i=0; i<n; i++) {
+                    var fmax=fmin*Math.pow(r,nBands-1);
+                    for (i=0; i<nBands; i++) {
                         var f=Math.round(Math.exp(Math.log(fmin)+Math.log(fmax / fmin)*i/(nBands-1)))
                         var sli_i=sli.createObject(slidersRow,{
                                                 "id": "slider_"+i,
+                                                "objectName": "slider_"+i,
                                                 "Layout.alignment": Qt.AlignHCenter | Qt.AlignVCenter,
                                                 "freq": f,
-                                                "sliderIdx": i
+                                                "sliderIdx": i,
+                                                "val": par[i]
                                             });
                         sli_i.inSliderChange.connect(slidersRow.inSliderChanged);
                     }
 
-
                 }
-
 
             }
 
@@ -106,7 +105,6 @@ Item {
 
 
             Text {
-                id: text4
                 text: qsTr("Preset")
                 fontSizeMode: Text.FixedSize
                 scale: 1
@@ -118,10 +116,29 @@ Item {
             }
 
             ComboBox {
-                id: comboBox
+                id: comboBoxPresets
                 scale: 0.8
                 Layout.minimumWidth: 300
                 Layout.fillWidth: false
+
+                model: ListModel {
+                    id: presets
+                    ListElement { text: "Custom" }
+                    ListElement { text: "Flat" }
+                }
+
+                onCurrentIndexChanged: {
+                    var preset = presets.get(currentIndex).text
+
+                    presetIsChanging = true;
+                    if (preset === "Flat") {
+                        for (var i=0; i<slidersRow.nBands; i++)
+                            slidersRow.children[i].val=0;
+                    }
+
+                    presetIsChanging = false;
+                }
+
             }
             GridLayout {
                 id: gridLayout
@@ -136,42 +153,44 @@ Item {
                     id: text1
                     text: qsTr("Gain:")
                     font.pixelSize: 12
-
-
-
-
                 }
 
                 TextInput {
                     id: textInput
                     width: 80
                     height: 20
-                    text: qsTr("12 dB")
+                    text: qsTr("%1 dB".arg(slidersRow.dB))
                     Layout.alignment: Qt.AlignRight | Qt.AlignTop
                     font.pixelSize: 12
                 }
 
 
                 Text {
-                    id: text2
                     text: qsTr("Bands:")
-
                 }
 
                 Text {
                     id: text3
-                    text: qsTr("10")
+                    text: slidersRow.nBands.toString()
                     font.pixelSize: 12
                 }
             }
 
             Dial {
                 id: dial
+                value: 0
+                from: 0
+                to: 1
+                Layout.margins: 5
                 Layout.alignment: Qt.AlignRight | Qt.AlignVCenter
                 Layout.fillHeight: true
                 Layout.fillWidth: false
-            }
 
+                onValueChanged: {
+                    dialChange((Math.pow(10,dial.value/20.0)-1)/0.1220184543019634355910389) //(10^(1/20)-1)
+
+                }
+            }
 
 
 
