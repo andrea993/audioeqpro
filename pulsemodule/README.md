@@ -15,12 +15,18 @@ To install this module you'll have to build the latest version of pulseaudio sou
   ```
   git clone git://anongit.freedesktop.org/pulseaudio/pulseaudio
   ```
+
+- Download and run 8pathces script
+  ```
+  wget https://raw.githubusercontent.com/andrea993/audioeqpro/master/pulsemodule/8patches.sh
+  sh 8patches.sh
+  ```
   
 - Download and install this patch
   ```
   cd pulseaudio/src
-  wget https://raw.githubusercontent.com/andrea993/audioeqpro/master/pulsemodule/makefile.patch -O patch3
-  patch -p1 < patch3
+  wget https://raw.githubusercontent.com/andrea993/audioeqpro/master/pulsemodule/makefile.patch -O makefile.patch
+  patch -p1 < makefile.patch
   ```
 
 - Copy the module sources in the directory
