@@ -101,7 +101,8 @@ public:
         //pa_message_param* param;
         char* startpos=NULL;
 
-        pa_message_param_split_list(mx.response.toLocal8Bit().data(), &startpos, NULL, &state);
+        QByteArray resp = mx.response.toLocal8Bit();
+        pa_message_param_split_list(resp.data(), &startpos, NULL, &state);
 
         int64_t n;
         pa_message_param_read_int64(startpos, &n,&state2);

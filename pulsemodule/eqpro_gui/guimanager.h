@@ -180,7 +180,7 @@ public slots:
         {
             QObject* root =engine->rootObjects().first();
             PulseDriver::Eqinfo info = pd.RequireEqInfo();
-            sliderRow=root->findChild<QObject*>("slidersRow");
+
             sliderRow->setProperty("nBands",info.nBands);
             sliderRow->setProperty("fmin",info.fmin);
             sliderRow->setProperty("r",info.r);
