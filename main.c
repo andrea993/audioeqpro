@@ -28,15 +28,14 @@ double filt(double u,double par[],double c[N][10],double x[N][M2]);
 int main(int argc, char **argv)
 {
 	double c[N][10];
-	double xL[N][M2]={0};
-	double xR[N][M2]={0};
+	double xL[N][M2]={{0}};
+	double xR[N][M2]={{0}};
 	double par[N]={-1,0,1,0,-1,0,1,0,-1,0};
 
 	WAVE inp,out;
 	FILE *finp, *fout;
 	char outfname[100];
 	unsigned i;
-
 
 	if(argc != 2)
 	{
@@ -92,7 +91,8 @@ void preprocessing(double c[N][10])
 		bw_n=wc_n*(sqrt(R)-1.0/sqrt(R))/wcross;
 
 		cw=cos(wc_n*T);
-		tbw=T*bw_n;
+		tbw=2/bw_n*tan(bw_n/2*T)*bw_n;
+		//tbw=T*bw_n;
 		c_m=cos(M_PI*(0.5-0.5/M));
 
 		a[0]=4+4*c_m*tbw+tbw*tbw;
@@ -147,7 +147,6 @@ double filt(double u,double par[],double c[N][10],double x[N][M2])
 
 		for (i=0;i<M2;i++)
 			x[n][i]=xn[i];
-//		memcpy(x[n],xn,M2*sizeof(double));
 	}
 	return y;
 }

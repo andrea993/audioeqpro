@@ -18,13 +18,13 @@ To install this module you'll have to build the latest version of pulseaudio sou
 
 - Download and run 8pathces script
   ```
+  cd pulseaudio
   wget https://raw.githubusercontent.com/andrea993/audioeqpro/master/pulsemodule/8patches.sh
   sh 8patches.sh
   ```
   
 - Download and install this patch
   ```
-  cd pulseaudio
   wget https://raw.githubusercontent.com/andrea993/audioeqpro/master/pulsemodule/makefile.patch -O makefile.patch
   patch -p1 < makefile.patch
   ```
@@ -60,7 +60,7 @@ To use this module just load it with pactl then set it as default sink, for exam
 pactl load-module module-eqpro-sink par="(1;1;1;1;0;0)" db=15
 pactl set-default-sink $(SINKNUMBER)
 ```
-Use `pactl list sinkis` to find the sink number.
+Use `pactl list sinks` to find the sink number.
   
 Possible arguments:
 ```

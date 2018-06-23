@@ -937,7 +937,7 @@ void eq_preproccesing(equalizerPar *eqp, double SR)
         bw_n=wc_n*(sqrt(eqp->R)-1.0/sqrt(eqp->R))/wcross;
 
         cw=cos(wc_n*T);
-        tbw=T*bw_n;
+        tbw=2/bw_n*tan(bw_n/2*T)*bw_n;
         c_m=cos(M_PI*(0.5-0.5/M));
 
         a[0]=4+4*c_m*tbw+tbw*tbw;
