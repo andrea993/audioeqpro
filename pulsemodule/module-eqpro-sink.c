@@ -119,7 +119,7 @@ static const char* const valid_modargs[] = {
 };
 
 /*equazlier functions */
-void eq_preproccesing(equalizerPar *eqp, double SR);
+void eq_preprocessing(equalizerPar *eqp, double SR);
 void eq_init(equalizerPar *eqp, double db, double f_min, int nChans, double oct, int N, double *par, double K);
 double eq_filter(double u, double par[], double **c, double **x, double K, int N);
 void calcArgs(bool isfmin, bool isNbands, double *fmin, unsigned *Nbands, double *octave, double FN);
@@ -748,7 +748,7 @@ int pa__init(pa_module*m) {
 
     //init eq
     eq_init(&u->eqp,db,fmin,u->channels,octave,(int)Nbands,par, K);
-    eq_preproccesing(&u->eqp,ss.rate);
+    eq_preprocessing(&u->eqp,ss.rate);
 
     /* The order here is important. The input must be put first,
          * otherwise streams might attach to the sink before the sink
@@ -917,9 +917,9 @@ void eq_init(equalizerPar *eqp, double db, double f_min, int nChans, double oct,
 
 }
 
-void eq_preproccesing(equalizerPar *eqp, double SR)
+void eq_preprocessing(equalizerPar *eqp, double SR)
 {
-    double v,g,cw,wcross,wc_n,fc_n,f_max,bw_n,T,tbw,c_m,d;
+    double v,g,cw,wcross,wc_n,fc_n,f_max,bw_n,T,tbw,c_m,d,Tpw;
     double a[3], b[3];
     int n;
 
@@ -936,8 +936,10 @@ void eq_preproccesing(equalizerPar *eqp, double SR)
         wc_n=2*M_PI*fc_n;
         bw_n=wc_n*(sqrt(eqp->R)-1.0/sqrt(eqp->R))/wcross;
 
-        cw=cos(wc_n*T);
-        tbw=2/bw_n*tan(bw_n/2*T)*bw_n;
+        
+		  Tpw=2.0/bw_n*tan(bw_n/2.0*T);
+		  cw=cos(Tpw/2.0*sqrt(4*wc_n*wc_n+1))/cos(Tpw/2.0);
+		  tbw=Tpw*bw_n;
         c_m=cos(M_PI*(0.5-0.5/M));
 
         a[0]=4+4*c_m*tbw+tbw*tbw;

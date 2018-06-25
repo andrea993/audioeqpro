@@ -3,8 +3,6 @@
  *
  * Read the LICENSE file for more information*/
 
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -73,7 +71,7 @@ int main(int argc, char **argv)
 
 void preprocessing(double c[N][10])
 {
-	double v,g,cw,wcross,wc_n,fc_n,f_max,bw_n,T,tbw,c_m,d;
+	double v,g,cw,wcross,wc_n,fc_n,f_max,bw_n,T,tbw,c_m,d,Tpw;
 	double a[3], b[3];
 	int n;
 
@@ -90,9 +88,9 @@ void preprocessing(double c[N][10])
 		wc_n=2*M_PI*fc_n;
 		bw_n=wc_n*(sqrt(R)-1.0/sqrt(R))/wcross;
 
-		cw=cos(wc_n*T);
-		tbw=2/bw_n*tan(bw_n/2*T)*bw_n;
-		//tbw=T*bw_n;
+		Tpw=2.0/bw_n*tan(bw_n/2.0*T);
+		cw=cos(Tpw/2.0*sqrt(4*wc_n*wc_n+1))/cos(Tpw/2.0);
+		tbw=Tpw*bw_n;
 		c_m=cos(M_PI*(0.5-0.5/M));
 
 		a[0]=4+4*c_m*tbw+tbw*tbw;
