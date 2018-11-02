@@ -73,6 +73,7 @@ PA_MODULE_USAGE(
 
 #define MODULE_MSG_PATH "/modules/eqpro"
 
+
 typedef struct __equalizerPar
 {
     int N;
@@ -100,6 +101,21 @@ struct userdata {
     unsigned channels;
     equalizerPar eqp;
 };
+
+enum {
+    SINK_MESSAGE_UPDATE_PARAMETERS = PA_SINK_MESSAGE_MAX
+};
+
+typedef enum __message_parameter {
+   sliderchange,
+	dialchange
+}message_parameter;
+
+typedef struct __asyncmsgq_data {
+    message_parameter par;
+	 double newval;
+	 int slideridx;
+}asyncmsgq_data;
 
 static const char* const valid_modargs[] = {
     "db",
@@ -154,6 +170,21 @@ static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t of
 
         return 0;
 
+	 case SINK_MESSAGE_UPDATE_PARAMETERS: {
+		 asyncmsgq_data *d = data;
+		 if (d->par ==  sliderchange) {
+			u->eqp.par[d->slideridx]=d->newval;
+		 }
+		 else if (d->par == dialchange) {
+			u->eqp.K = d->newval;
+		 }
+		 else {
+			 pa_log("Unsupported parameter in asyncmsgq");
+		 }
+		 pa_xfree(d);
+		 return 0;
+	 }
+
     case PA_SINK_MESSAGE_SET_STATE: {
         pa_sink_state_t new_state = (pa_sink_state_t) PA_PTR_TO_UINT(data);
 
@@ -164,8 +195,8 @@ static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t of
             pa_sink_input_request_rewind(u->sink_input, 0, false, true, true);
         }
     }
-    }
 
+    }
     return pa_sink_process_msg(o, code, data, offset, chunk);
 }
 
@@ -1032,6 +1063,7 @@ static int eqpro_message_handler(const char *object_path, const char *message, c
     int64_t arg_i;
     pa_message_param* param;
     int i;
+	 asyncmsgq_data* msgqd;
 
     pa_assert(u = (struct userdata*)ud);
     pa_assert(message);
@@ -1063,9 +1095,15 @@ static int eqpro_message_handler(const char *object_path, const char *message, c
             return -PA_ERR_NOTIMPLEMENTED;
         }
 
-        u->eqp.par[arg_i]=arg_d;
+        //u->eqp.par[arg_i]=arg_d;
 
         //pa_log(pa_sprintf_malloc("Change par %d to %f",(int)arg_i, arg_d));
+
+		  msgqd = pa_xnew0(asyncmsgq_data,1); 
+		  msgqd->par = sliderchange;
+		  msgqd->slideridx = arg_i;
+		  msgqd->newval = arg_d;
+        pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink),SINK_MESSAGE_UPDATE_PARAMETERS, msgqd, 0, NULL);
 
         *response=pa_xstrdup("OK");
 
@@ -1082,7 +1120,12 @@ static int eqpro_message_handler(const char *object_path, const char *message, c
             return -PA_ERR_NOTIMPLEMENTED;
         }
 
-        u->eqp.K=arg_d;
+        //u->eqp.K=arg_d;
+
+		  msgqd = pa_xnew0(asyncmsgq_data,1); 
+		  msgqd->par = dialchange;
+		  msgqd->newval = arg_d;
+        pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink),SINK_MESSAGE_UPDATE_PARAMETERS, msgqd, 0, NULL);
 
         *response=pa_xstrdup("OK");
 
