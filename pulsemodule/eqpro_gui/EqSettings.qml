@@ -69,7 +69,7 @@ Item {
 
                     }
 
-                    var sli=Qt.createComponent("Eqpro_slider.qml");
+                    var sli=Qt.createComponent("EqproSlider.qml");
                     var fmax=fmin*Math.pow(r,nBands-1);
                     for (i=0; i<nBands; i++) {
                         var f=Math.round(Math.exp(Math.log(fmin)+Math.log(fmax / fmin)*i/(nBands-1)))

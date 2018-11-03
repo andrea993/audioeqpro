@@ -43,7 +43,7 @@ private:
         switch (s)
         {
         case GUIstate::disconnected:
-            pageloader->setProperty("source", QUrl(QLatin1String("qrc:/Page0CheckModuleForm.qml")));
+            pageloader->setProperty("source", QUrl(QLatin1String("qrc:/ModuleCheck.qml")));
 
             retryButton=root->findChild<QObject*>("retryButton");
             connect(retryButton, SIGNAL(clicked()),this,SLOT(RetryButtonPressed()));
@@ -51,7 +51,7 @@ private:
             break;
 
         case GUIstate::chooseconnection:
-            pageloader->setProperty("source",  QUrl(QLatin1String("qrc:/Page05SelectConnection.qml")));
+            pageloader->setProperty("source",  QUrl(QLatin1String("qrc:/ConnectionSelection.qml")));
 
             combomod=root->findChild<QObject*>("comboModules");
 
@@ -66,7 +66,7 @@ private:
             break;
 
         case GUIstate::connected:
-             pageloader->setProperty("source", QUrl(QLatin1String("qrc:/Page1Form.qml")));
+             pageloader->setProperty("source", QUrl(QLatin1String("qrc:/EqSettings.qml")));
 
              QObject* page1=root->findChild<QObject*>("page1");
 
