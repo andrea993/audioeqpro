@@ -10,6 +10,8 @@ Window {
 
     width: 640
     height: 480
+    minimumWidth: 640
+    minimumHeight: 300
     title: qsTr("EqualizerPro")
 
     Loader {

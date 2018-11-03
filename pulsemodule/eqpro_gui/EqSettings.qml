@@ -11,7 +11,7 @@ Item {
 
     property bool presetIsChanging: false
     property alias dialvalue: dial.value
-    property int barSpace: 7.0
+    property int barSpace: 70.0
 
     ColumnLayout {
         anchors.fill: parent
@@ -24,7 +24,7 @@ Item {
             focus: true
 
             contentHeight: height
-            contentWidth: width*slidersRow.nBands/10
+            contentWidth: Math.max(barSpace+barSpace*slidersRow.nBands, page1.width)
 
             ScrollBar.horizontal: ScrollBar {
                 parent: flickable.parent
@@ -42,7 +42,7 @@ Item {
                 id: slidersRow
 
                 height: parent.height
-                width: barSpace*10*nBands
+                width: Math.max(barSpace+barSpace*slidersRow.nBands, page1.width)
 
                 property int nBands: 10
                 property double fmin: 1000.0
