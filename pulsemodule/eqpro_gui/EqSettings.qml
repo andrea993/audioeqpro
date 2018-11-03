@@ -11,6 +11,7 @@ Item {
 
     property bool presetIsChanging: false
     property alias dialvalue: dial.value
+    property int barSpace: 7.0
 
     ColumnLayout {
         anchors.fill: parent
@@ -30,7 +31,7 @@ Item {
                 anchors.left: flickable.left
                 anchors.right:  flickable.right
                 anchors.bottom: flickable.bottom
-
+                policy: ScrollBar.AlwaysOn
             }
             flickableDirection: Flickable.HorizontalFlick
 
@@ -41,7 +42,7 @@ Item {
                 id: slidersRow
 
                 height: parent.height
-                width: page1.width/10*nBands
+                width: barSpace*10*nBands
 
                 property int nBands: 10
                 property double fmin: 1000.0
@@ -83,12 +84,8 @@ Item {
                                             });
                         sli_i.inSliderChange.connect(slidersRow.inSliderChanged);
                     }
-
                 }
-
             }
-
-
         }
 
         RowLayout {
@@ -188,22 +185,8 @@ Item {
 
                 onValueChanged: {
                     dialChange((Math.pow(10,dial.value/20.0)-1)/0.1220184543019634355910389) //(10^(1/20)-1)
-
                 }
             }
-
-
-
         }
-
-
-
-
-
-
-
-
     }
-
-
 }

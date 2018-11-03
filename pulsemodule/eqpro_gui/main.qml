@@ -16,7 +16,7 @@ Window {
         id: pageloader
         objectName: "pageloader"
 
-        source: "Page1Form.qml"
+        source: "EqSettings.qml"
         anchors.fill: parent
     }
 
