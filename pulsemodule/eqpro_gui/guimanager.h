@@ -80,6 +80,8 @@ private:
 
              page1->setProperty("dialvalue",info.K);
 
+             root->setProperty("title", "EqualizerPro(module: "+ QString::number(pd.getModuleNum())+")");
+
              QVariant ret_x;
              QMetaObject::invokeMethod(sliderRow, "redrawSlider", Q_RETURN_ARG(QVariant, ret_x), Q_ARG(QVariant, QVariant::fromValue(info.par)));
 
