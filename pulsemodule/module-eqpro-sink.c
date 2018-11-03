@@ -44,7 +44,7 @@
 
 PA_MODULE_AUTHOR("Andrea Drius");
 PA_MODULE_DESCRIPTION("Professional customizable equalizer");
-PA_MODULE_VERSION("v0.00.1-beta");
+PA_MODULE_VERSION("v0.20.0");
 PA_MODULE_LOAD_ONCE(false);
 PA_MODULE_USAGE(
         _("sink_name=<name for the sink> "
@@ -134,13 +134,261 @@ static const char* const valid_modargs[] = {
     NULL
 };
 
-/*equazlier functions */
-void eq_preprocessing(equalizerPar *eqp, double SR);
-void eq_init(equalizerPar *eqp, double db, double f_min, int nChans, double oct, int N, double *par, double K);
-double eq_filter(double u, double par[], double **c, double **x, double K, int N);
-void calcArgs(bool isfmin, bool isNbands, double *fmin, unsigned *Nbands, double *octave, double FN);
-int readParFromStr(char *str, unsigned N, double *out);
-static int eqpro_message_handler(const char *object_path, const char *message, char *message_parameters, char **response, void *userdata);
+static double eq_filter(double u, double par[], double **c, double **x, double K, int N)
+{
+    double pn2,pn21,pn22,den,u0,xn2cn1;
+    double xn[M2];
+    int n,i;
+    double y=u*K;
+
+    for(n=0; n<N; n++)
+    {
+        pn2=2*par[n];
+        pn21=par[n]+1;
+        pn22=par[n]-1;
+
+        den=pn21-pn22*c[n][9];
+        u0=(pn22*x[n][0]+2*y)/den;
+        y=(pn2*x[n][0]+(pn21*c[n][9]-pn22)*y)/den;
+
+        xn2cn1=x[n][2]*c[n][1];
+
+        xn[0]=x[n][0]*c[n][0]-x[n][1]+xn2cn1+c[n][2]*u0;
+        xn[1]=x[n][0]*c[n][4]+x[n][2]+c[n][3]*u0;
+        xn[2]=x[n][0]*c[n][6]+xn2cn1-x[n][3]+u0*c[n][5];
+        xn[3]=x[n][0]*c[n][8]+u0*c[n][7];
+
+        for (i=0; i<M2; i++)
+            x[n][i]=xn[i];
+    }
+    return y;
+
+}
+
+static void eq_init(equalizerPar *eqp, double db, double f_min, int nChans, double oct, int N, double *par, double K)
+{
+    int n,i;
+    eqp->f_min=f_min;
+    eqp->DB=db;
+    eqp->R=pow(2,oct);
+    eqp->N=N;
+    eqp->par=par;
+    eqp->K=K;
+
+    eqp->c=(double**)pa_xmalloc(eqp->N*sizeof(double*));
+    for(n=0; n<eqp->N; n++)
+        eqp->c[n]=(double*)pa_xmalloc(10*sizeof(double));
+
+    eqp->X=(double***)pa_xmalloc(nChans*sizeof(double**));
+    for(i=0; i<nChans; i++)
+    {
+        eqp->X[i]=(double**)pa_xmalloc(eqp->N*sizeof(double*));
+        for(n=0; n<eqp->N; n++)
+            eqp->X[i][n]=(double*)pa_xmalloc0(M2*sizeof(double));
+    }
+
+}
+
+static void eq_preprocessing(equalizerPar *eqp, double SR)
+{
+    double v,g,cw,wcross,wc_n,fc_n,f_max,bw_n,T,tbw,c_m,d,Tpw;
+    double a[3], b[3];
+    int n;
+
+    T=1.0/SR;
+
+    g=pow(10,eqp->DB/20.0);
+    wcross=pow(g,1.0/2.0/M);
+    v=pow(g,1.0/M)-1;
+    f_max=eqp->f_min*pow(eqp->R,eqp->N-1);
+
+    for(n=0; n<eqp->N; n++)
+    {
+        fc_n=round(exp(log(eqp->f_min)+log(f_max/(double)eqp->f_min)*(n-1)/(double)(eqp->N-1)));
+        wc_n=2*M_PI*fc_n;
+        bw_n=wc_n*(sqrt(eqp->R)-1.0/sqrt(eqp->R))/wcross;
+
+        
+		  Tpw=2.0/bw_n*tan(bw_n/2.0*T);
+		  cw=cos(Tpw/2.0*sqrt(4*wc_n*wc_n+1))/cos(Tpw/2.0);
+		  tbw=Tpw*bw_n;
+        c_m=cos(M_PI*(0.5-0.5/M));
+
+        a[0]=4+4*c_m*tbw+tbw*tbw;
+        a[1]=a[2]=1.0/a[0];
+        a[1]*=2*tbw*tbw-8;
+        a[2]*=a[0]-8*c_m*tbw;
+
+        b[0]=b[1]=b[2]=tbw*v/a[0];
+        b[0]*=2*tbw+4*c_m+tbw*v;
+        b[1]*=2*tbw*(v+2);
+        b[2]*=2*tbw-4*c_m+tbw*v;
+
+        d=b[0]+1;
+        eqp->c[n][0]=cw*(1-a[1]);
+        eqp->c[n][1]=cw;
+        eqp->c[n][2]=cw*(b[1]-a[1]*b[0]);
+        eqp->c[n][3]=b[1]-a[1]*b[0];
+        eqp->c[n][4]=-a[1];
+        eqp->c[n][5]=cw*(b[2]-a[2]*b[0]);
+        eqp->c[n][6]=-a[2]*cw;
+        eqp->c[n][7]=b[2]-a[2]*b[0];
+        eqp->c[n][8]=-a[2];
+        eqp->c[n][9]=d;
+    }
+}
+
+static void calcArgs(bool isfmin, bool isNbands, double *fmin, unsigned *Nbands, double *octave, double FN)
+{
+    double R;
+
+    if (isfmin && isNbands){
+        R=pow(FN / *fmin, 1.0 / *Nbands);
+        *octave=log(R)/log(2);
+        return;
+    }
+    if (isNbands){
+        R=pow(2,*octave);
+        *fmin=FN/pow(R,*Nbands);
+        return;
+    }
+    R=pow(2,*octave);
+    *Nbands=floor(log(FN/ *fmin)/log(R));
+
+}
+
+static int readParFromStr(char *str, unsigned N, double *out)
+{
+    unsigned i;
+    char *s=str, *end=NULL;
+
+    if (strlen(str) < 2)
+        return -1;
+
+    if (*s!='(')
+        return -1;
+
+    s++;
+    i=0;
+    while (*s!='\0' && i<N){
+        out[i]=strtod(s, &end);
+        if(!end || s==end)
+            return -1;
+
+        if (fabs(out[i])>1)
+            return -1;
+
+        s=end;
+        if(*s=='\0' || (*s!=';' && *(s+1)!='\0') || (*s!=')' && *(s+1)=='\0'))
+            return -1;
+
+        s++;
+        i++;
+    }
+
+    for (; i<N; i++)
+        out[i]=0;
+
+    return 0;
+
+}
+
+/* Called from Main thread context */
+static int eqpro_message_handler(const char *object_path, const char *message, char *message_parameters, char **response, void *ud) {
+
+    struct userdata *u;
+
+    void *state = NULL, *state2=NULL;
+    char *startpos = NULL, *fullpath_str;
+    double arg_d;
+    int64_t arg_i;
+    pa_message_param* param;
+    int i;
+	 asyncmsgq_data* msgqd;
+
+    pa_assert(u = (struct userdata*)ud);
+    pa_assert(message);
+    pa_assert(response);
+
+    fullpath_str = pa_sprintf_malloc("%s/%d",MODULE_MSG_PATH, u->module->index);
+    pa_assert(pa_safe_streq(object_path, fullpath_str));
+    pa_xfree(fullpath_str);
+
+
+    if(pa_streq(message, "sliderchange")) {
+
+        if(pa_message_param_split_list(message_parameters, &startpos, NULL, &state) <= 0)
+            return -PA_ERR_NOTIMPLEMENTED;
+
+        if(pa_message_param_read_double(startpos, &arg_d, &state2) <= 0)
+            return -PA_ERR_NOTIMPLEMENTED;
+
+        if(pa_message_param_read_int64(startpos, &arg_i, &state2) <= 0)
+            return -PA_ERR_NOTIMPLEMENTED;
+
+        if(arg_i < 0 || arg_i >= u->eqp.N) {
+            *response = pa_xstrdup("Cursor doesn't exists");
+            return -PA_ERR_NOTIMPLEMENTED;
+        }
+
+        if(fabs(arg_d) > 1.0) {
+            *response = pa_xstrdup("Cursor value out of range");
+            return -PA_ERR_NOTIMPLEMENTED;
+        }
+
+		  msgqd = pa_xnew0(asyncmsgq_data,1); 
+		  msgqd->par = sliderchange;
+		  msgqd->slideridx = arg_i;
+		  msgqd->newval = arg_d;
+        pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink),SINK_MESSAGE_UPDATE_PARAMETERS, msgqd, 0, NULL);
+
+        *response=pa_xstrdup("OK");
+
+        return PA_OK;
+    }
+
+    if(pa_streq(message, "dialchange")) {
+
+        if(pa_message_param_read_double(message_parameters, &arg_d, &state) <= 0)
+            return -PA_ERR_NOTIMPLEMENTED;
+
+        if(arg_d < 0) {
+            *response = pa_xstrdup("K value must be positive");
+            return -PA_ERR_NOTIMPLEMENTED;
+        }
+
+		  msgqd = pa_xnew0(asyncmsgq_data,1); 
+		  msgqd->par = dialchange;
+		  msgqd->newval = arg_d;
+        pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink),SINK_MESSAGE_UPDATE_PARAMETERS, msgqd, 0, NULL);
+
+        *response=pa_xstrdup("OK");
+
+        return PA_OK;
+
+    }
+
+    if(pa_streq(message, "getinfo")) {
+        param = pa_message_param_new();
+        pa_message_param_begin_list(param);
+        pa_message_param_write_int64(param, u->eqp.N);
+        pa_message_param_write_double(param, u->eqp.f_min,32);
+        pa_message_param_write_double(param, u->eqp.DB,32);
+        pa_message_param_write_double(param, u->eqp.R, 32);
+        pa_message_param_write_double(param, u->eqp.K, 32);
+        for (i=0; i<u->eqp.N; i++)
+            pa_message_param_write_double(param, u->eqp.par[i],32);
+        pa_message_param_end_list(param);
+
+        *response=pa_message_param_to_string(param);
+
+        return PA_OK;
+    }
+
+
+
+    return -PA_ERR_NOTIMPLEMENTED;
+}
 
 /* Called from I/O thread context */
 static int sink_process_msg_cb(pa_msgobject *o, int code, void *data, int64_t offset, pa_memchunk *chunk) {
@@ -352,7 +600,6 @@ static int sink_input_pop_cb(pa_sink_input *i, size_t nbytes, pa_memchunk *chunk
         for(c=0; c<u->channels; c++)
         {
             *dst=(float)eq_filter(*src,u->eqp.par,u->eqp.c,u->eqp.X[c],u->eqp.K,u->eqp.N);
-            //*dst=*src;
             src++;
             dst++;
         }
@@ -892,267 +1139,6 @@ void pa__done(pa_module*m) {
 
     /*free userdata*/
     pa_xfree(u);
-}
-
-double eq_filter(double u, double par[], double **c, double **x, double K, int N)
-{
-    double pn2,pn21,pn22,den,u0,xn2cn1;
-    double xn[M2];
-    int n,i;
-    double y=u*K;
-
-    for(n=0; n<N; n++)
-    {
-        pn2=2*par[n];
-        pn21=par[n]+1;
-        pn22=par[n]-1;
-
-        den=pn21-pn22*c[n][9];
-        u0=(pn22*x[n][0]+2*y)/den;
-        y=(pn2*x[n][0]+(pn21*c[n][9]-pn22)*y)/den;
-
-        xn2cn1=x[n][2]*c[n][1];
-
-        xn[0]=x[n][0]*c[n][0]-x[n][1]+xn2cn1+c[n][2]*u0;
-        xn[1]=x[n][0]*c[n][4]+x[n][2]+c[n][3]*u0;
-        xn[2]=x[n][0]*c[n][6]+xn2cn1-x[n][3]+u0*c[n][5];
-        xn[3]=x[n][0]*c[n][8]+u0*c[n][7];
-
-        for (i=0; i<M2; i++)
-            x[n][i]=xn[i];
-    }
-    return y;
-
-}
-
-void eq_init(equalizerPar *eqp, double db, double f_min, int nChans, double oct, int N, double *par, double K)
-{
-    int n,i;
-    eqp->f_min=f_min;
-    eqp->DB=db;
-    eqp->R=pow(2,oct);
-    eqp->N=N;
-    eqp->par=par;
-    eqp->K=K;
-
-    eqp->c=(double**)pa_xmalloc(eqp->N*sizeof(double*));
-    for(n=0; n<eqp->N; n++)
-        eqp->c[n]=(double*)pa_xmalloc(10*sizeof(double));
-
-    eqp->X=(double***)pa_xmalloc(nChans*sizeof(double**));
-    for(i=0; i<nChans; i++)
-    {
-        eqp->X[i]=(double**)pa_xmalloc(eqp->N*sizeof(double*));
-        for(n=0; n<eqp->N; n++)
-            eqp->X[i][n]=(double*)pa_xmalloc0(M2*sizeof(double));
-    }
-
-}
-
-void eq_preprocessing(equalizerPar *eqp, double SR)
-{
-    double v,g,cw,wcross,wc_n,fc_n,f_max,bw_n,T,tbw,c_m,d,Tpw;
-    double a[3], b[3];
-    int n;
-
-    T=1.0/SR;
-
-    g=pow(10,eqp->DB/20.0);
-    wcross=pow(g,1.0/2.0/M);
-    v=pow(g,1.0/M)-1;
-    f_max=eqp->f_min*pow(eqp->R,eqp->N-1);
-
-    for(n=0; n<eqp->N; n++)
-    {
-        fc_n=round(exp(log(eqp->f_min)+log(f_max/(double)eqp->f_min)*(n-1)/(double)(eqp->N-1)));
-        wc_n=2*M_PI*fc_n;
-        bw_n=wc_n*(sqrt(eqp->R)-1.0/sqrt(eqp->R))/wcross;
-
-        
-		  Tpw=2.0/bw_n*tan(bw_n/2.0*T);
-		  cw=cos(Tpw/2.0*sqrt(4*wc_n*wc_n+1))/cos(Tpw/2.0);
-		  tbw=Tpw*bw_n;
-        c_m=cos(M_PI*(0.5-0.5/M));
-
-        a[0]=4+4*c_m*tbw+tbw*tbw;
-        a[1]=a[2]=1.0/a[0];
-        a[1]*=2*tbw*tbw-8;
-        a[2]*=a[0]-8*c_m*tbw;
-
-        b[0]=b[1]=b[2]=tbw*v/a[0];
-        b[0]*=2*tbw+4*c_m+tbw*v;
-        b[1]*=2*tbw*(v+2);
-        b[2]*=2*tbw-4*c_m+tbw*v;
-
-        d=b[0]+1;
-        eqp->c[n][0]=cw*(1-a[1]);
-        eqp->c[n][1]=cw;
-        eqp->c[n][2]=cw*(b[1]-a[1]*b[0]);
-        eqp->c[n][3]=b[1]-a[1]*b[0];
-        eqp->c[n][4]=-a[1];
-        eqp->c[n][5]=cw*(b[2]-a[2]*b[0]);
-        eqp->c[n][6]=-a[2]*cw;
-        eqp->c[n][7]=b[2]-a[2]*b[0];
-        eqp->c[n][8]=-a[2];
-        eqp->c[n][9]=d;
-    }
-}
-
-void calcArgs(bool isfmin, bool isNbands, double *fmin, unsigned *Nbands, double *octave, double FN)
-{
-    double R;
-
-    if (isfmin && isNbands){
-        R=pow(FN / *fmin, 1.0 / *Nbands);
-        *octave=log(R)/log(2);
-        return;
-    }
-    if (isNbands){
-        R=pow(2,*octave);
-        *fmin=FN/pow(R,*Nbands);
-        return;
-    }
-    R=pow(2,*octave);
-    *Nbands=floor(log(FN/ *fmin)/log(R));
-
-}
-
-int readParFromStr(char *str, unsigned N, double *out)
-{
-    unsigned i;
-    char *s=str, *end=NULL;
-
-    if (strlen(str) < 2)
-        return -1;
-
-    if (*s!='(')
-        return -1;
-
-    s++;
-    i=0;
-    while (*s!='\0' && i<N){
-        out[i]=strtod(s, &end);
-        if(!end || s==end)
-            return -1;
-
-        if (fabs(out[i])>1)
-            return -1;
-
-        s=end;
-        if(*s=='\0' || (*s!=';' && *(s+1)!='\0') || (*s!=')' && *(s+1)=='\0'))
-            return -1;
-
-        s++;
-        i++;
-    }
-
-    for (; i<N; i++)
-        out[i]=0;
-
-    return 0;
-
-}
-
-static int eqpro_message_handler(const char *object_path, const char *message, char *message_parameters, char **response, void *ud) {
-
-    struct userdata *u;
-
-    void *state = NULL, *state2=NULL;
-    char *startpos = NULL, *fullpath_str;
-    double arg_d;
-    int64_t arg_i;
-    pa_message_param* param;
-    int i;
-	 asyncmsgq_data* msgqd;
-
-    pa_assert(u = (struct userdata*)ud);
-    pa_assert(message);
-    pa_assert(response);
-
-    fullpath_str = pa_sprintf_malloc("%s/%d",MODULE_MSG_PATH, u->module->index);
-    pa_assert(pa_safe_streq(object_path, fullpath_str));
-    pa_xfree(fullpath_str);
-
-
-    if(pa_streq(message, "sliderchange")) {
-
-        if(pa_message_param_split_list(message_parameters, &startpos, NULL, &state) <= 0)
-            return -PA_ERR_NOTIMPLEMENTED;
-
-        if(pa_message_param_read_double(startpos, &arg_d, &state2) <= 0)
-            return -PA_ERR_NOTIMPLEMENTED;
-
-        if(pa_message_param_read_int64(startpos, &arg_i, &state2) <= 0)
-            return -PA_ERR_NOTIMPLEMENTED;
-
-        if(arg_i < 0 || arg_i >= u->eqp.N) {
-            *response = pa_xstrdup("Cursor doesn't exists");
-            return -PA_ERR_NOTIMPLEMENTED;
-        }
-
-        if(fabs(arg_d) > 1.0) {
-            *response = pa_xstrdup("Cursor value out of range");
-            return -PA_ERR_NOTIMPLEMENTED;
-        }
-
-        //u->eqp.par[arg_i]=arg_d;
-
-        //pa_log(pa_sprintf_malloc("Change par %d to %f",(int)arg_i, arg_d));
-
-		  msgqd = pa_xnew0(asyncmsgq_data,1); 
-		  msgqd->par = sliderchange;
-		  msgqd->slideridx = arg_i;
-		  msgqd->newval = arg_d;
-        pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink),SINK_MESSAGE_UPDATE_PARAMETERS, msgqd, 0, NULL);
-
-        *response=pa_xstrdup("OK");
-
-        return PA_OK;
-    }
-
-    if(pa_streq(message, "dialchange")) {
-
-        if(pa_message_param_read_double(message_parameters, &arg_d, &state) <= 0)
-            return -PA_ERR_NOTIMPLEMENTED;
-
-        if(arg_d < 0) {
-            *response = pa_xstrdup("K value must be positive");
-            return -PA_ERR_NOTIMPLEMENTED;
-        }
-
-        //u->eqp.K=arg_d;
-
-		  msgqd = pa_xnew0(asyncmsgq_data,1); 
-		  msgqd->par = dialchange;
-		  msgqd->newval = arg_d;
-        pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink),SINK_MESSAGE_UPDATE_PARAMETERS, msgqd, 0, NULL);
-
-        *response=pa_xstrdup("OK");
-
-        return PA_OK;
-
-    }
-
-    if(pa_streq(message, "getinfo")) {
-        param = pa_message_param_new();
-        pa_message_param_begin_list(param);
-        pa_message_param_write_int64(param, u->eqp.N);
-        pa_message_param_write_double(param, u->eqp.f_min,32);
-        pa_message_param_write_double(param, u->eqp.DB,32);
-        pa_message_param_write_double(param, u->eqp.R, 32);
-        pa_message_param_write_double(param, u->eqp.K, 32);
-        for (i=0; i<u->eqp.N; i++)
-            pa_message_param_write_double(param, u->eqp.par[i],32);
-        pa_message_param_end_list(param);
-
-        *response=pa_message_param_to_string(param);
-
-        return PA_OK;
-    }
-
-
-
-    return -PA_ERR_NOTIMPLEMENTED;
 }
 
 
