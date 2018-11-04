@@ -10,13 +10,15 @@ Window {
 
     width: 640
     height: 480
+    minimumWidth: 640
+    minimumHeight: 300
     title: qsTr("EqualizerPro")
 
     Loader {
         id: pageloader
         objectName: "pageloader"
 
-        source: "Page1Form.qml"
+        source: "EqSettings.qml"
         anchors.fill: parent
     }
 

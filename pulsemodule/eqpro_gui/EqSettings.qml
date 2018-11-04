@@ -11,6 +11,7 @@ Item {
 
     property bool presetIsChanging: false
     property alias dialvalue: dial.value
+    property int barSpace: 70.0
 
     ColumnLayout {
         anchors.fill: parent
@@ -23,14 +24,14 @@ Item {
             focus: true
 
             contentHeight: height
-            contentWidth: width*slidersRow.nBands/10
+            contentWidth: Math.max(barSpace+barSpace*slidersRow.nBands, page1.width)
 
             ScrollBar.horizontal: ScrollBar {
                 parent: flickable.parent
                 anchors.left: flickable.left
                 anchors.right:  flickable.right
                 anchors.bottom: flickable.bottom
-
+                policy: ScrollBar.AlwaysOn
             }
             flickableDirection: Flickable.HorizontalFlick
 
@@ -41,7 +42,7 @@ Item {
                 id: slidersRow
 
                 height: parent.height
-                width: page1.width/10*nBands
+                width: Math.max(barSpace+barSpace*slidersRow.nBands, page1.width)
 
                 property int nBands: 10
                 property double fmin: 1000.0
@@ -69,7 +70,7 @@ Item {
 
                     }
 
-                    var sli=Qt.createComponent("Eqpro_slider.qml");
+                    var sli=Qt.createComponent("EqproSlider.qml");
                     var fmax=fmin*Math.pow(r,nBands-1);
                     for (i=0; i<nBands; i++) {
                         var f=Math.round(Math.exp(Math.log(fmin)+Math.log(fmax / fmin)*i/(nBands-1)))
@@ -83,12 +84,8 @@ Item {
                                             });
                         sli_i.inSliderChange.connect(slidersRow.inSliderChanged);
                     }
-
                 }
-
             }
-
-
         }
 
         RowLayout {
@@ -188,22 +185,8 @@ Item {
 
                 onValueChanged: {
                     dialChange((Math.pow(10,dial.value/20.0)-1)/0.1220184543019634355910389) //(10^(1/20)-1)
-
                 }
             }
-
-
-
         }
-
-
-
-
-
-
-
-
     }
-
-
 }
