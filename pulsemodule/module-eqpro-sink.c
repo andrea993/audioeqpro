@@ -204,7 +204,7 @@ static void eq_preprocessing(equalizerPar *eqp, double SR)
 
     for(n=0; n<eqp->N; n++)
     {
-        fc_n=round(exp(log(eqp->f_min)+log(f_max/(double)eqp->f_min)*(n-1)/(double)(eqp->N-1)));
+        fc_n=round(exp(log(eqp->f_min)+log(f_max/(double)eqp->f_min)*(n)/(double)(eqp->N-1)));
         wc_n=2*M_PI*fc_n;
         bw_n=wc_n*(sqrt(eqp->R)-1.0/sqrt(eqp->R))/wcross;
 
@@ -825,11 +825,11 @@ int pa__init(pa_module*m) {
     bool use_volume_sharing = true;
     bool force_flat_volume = false;
     pa_memchunk silence;
-    double fmin=DEFAULT_FMIN, octave=DEFAULT_OCT, db=DEFAULT_DB, K=DEFAULT_K;
+    double fmin, octave, db, K;
     unsigned Nbands = 0;
     double* par=NULL;
     char *str=NULL, *fullpath_str=NULL;
-    bool isfmin=false, isNbands=false, isoctave=false;
+    bool isfmin=true, isNbands=true, isoctave=true;
     int ret;
 
     pa_assert(m);
@@ -864,58 +864,82 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
+	 /* FIXME pa_modargs_get_value* can't detect whether the user gave an invalid argument to the module or whether the user left the argument blank, I'm working around this using strange values but it is exploitable */
+	 
+ _Pragma("GCC diagnostic push")
+ _Pragma("GCC diagnostic ignored \"-Wfloat-equal\"")
+	 db=DBL_EPSILON;
     ret=pa_modargs_get_value_double(ma, "db", &db);
     if (ret < 0) {
         pa_log("db= expects a double argument");
         goto fail;
     }
+	 if (db == DBL_EPSILON)
+		 db=DEFAULT_DB;
+	 if (db <= 0) {
+		 pa_log("db must be positive");
+		 goto fail;
+	 }
 
+	 K=DBL_EPSILON;
     ret=pa_modargs_get_value_double(ma, "K", &K);
     if (ret < 0) {
         pa_log("K= expects a double argument");
         goto fail;
     }
+	 if (K == DBL_EPSILON)
+		 K = DEFAULT_K;
     if (K<0) {
         pa_log("K= expects a positive double");
         goto fail;
     }
 
+	 fmin = DBL_EPSILON;
     ret=pa_modargs_get_value_double(ma, "fmin", &fmin);
     if (ret < 0) {
         pa_log("fmin= expects a double argument");
         goto fail;
     }
+	 if (fmin == DBL_EPSILON)
+	 {
+		 fmin = DEFAULT_FMIN;
+		 isfmin = false;
+	 }
     if (fmin <= 0 || fmin>=ss.rate/2.0) {
         pa_log("fmin= expects a positive double less than (sampling rate)/2");
         goto fail;
     }
-    if (fabs(fmin - DEFAULT_FMIN) > DBL_EPSILON)
-        isfmin=true;
 
+	 octave = DBL_EPSILON;
     ret=pa_modargs_get_value_double(ma, "octave", &octave);
     if (ret < 0) {
         pa_log("octave= expects a double argument");
         goto fail;
     }
+	 if (octave == DBL_EPSILON) {
+		 octave = DEFAULT_OCT;
+		 isoctave = false;
+	 }
     if (octave <= 0) {
         pa_log("octave= expects a positive double");
         goto fail;
     }
-    if (fabs(octave - DEFAULT_OCT) > DBL_EPSILON)
-        isoctave=true;
 
+	 Nbands = UINT_MAX;
     ret=pa_modargs_get_value_u32(ma, "Nbands", &Nbands);
     if (ret < 0) {
         pa_log("Nbands= expects an unsigned argument");
         goto fail;
     }
-    if (Nbands > 0)
-        isNbands=true;
+	 if (Nbands == UINT_MAX)
+		isNbands = false;
 
     if (isoctave && isNbands && isfmin) {
         pa_log("You can choose up to two arguments between: octave, Nbands, fmin");
         goto fail;
     }
+_Pragma("GCC diagnostic pop") \
+
     calcArgs(isfmin, isNbands, &fmin, &Nbands, &octave, ss.rate/2.0);
 
 
