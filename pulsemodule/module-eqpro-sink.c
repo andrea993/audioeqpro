@@ -304,7 +304,7 @@ static int eqpro_message_handler(const char *object_path, const char *message, c
     int64_t arg_i;
     pa_message_param* param;
     int i;
-	 asyncmsgq_data* msgqd;
+    asyncmsgq_data* msgqd;
 
     pa_assert(u = (struct userdata*)ud);
     pa_assert(message);
@@ -336,10 +336,10 @@ static int eqpro_message_handler(const char *object_path, const char *message, c
             return -PA_ERR_NOTIMPLEMENTED;
         }
 
-		  msgqd = pa_xnew0(asyncmsgq_data,1); 
-		  msgqd->par = sliderchange;
-		  msgqd->slideridx = arg_i;
-		  msgqd->newval = arg_d;
+        msgqd = pa_xnew0(asyncmsgq_data,1); 
+        msgqd->par = sliderchange;
+        msgqd->slideridx = arg_i;
+        msgqd->newval = arg_d;
         pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink),SINK_MESSAGE_UPDATE_PARAMETERS, msgqd, 0, NULL);
 
         *response=pa_xstrdup("OK");
@@ -357,9 +357,9 @@ static int eqpro_message_handler(const char *object_path, const char *message, c
             return -PA_ERR_NOTIMPLEMENTED;
         }
 
-		  msgqd = pa_xnew0(asyncmsgq_data,1); 
-		  msgqd->par = dialchange;
-		  msgqd->newval = arg_d;
+        msgqd = pa_xnew0(asyncmsgq_data,1); 
+        msgqd->par = dialchange;
+        msgqd->newval = arg_d;
         pa_asyncmsgq_send(u->sink->asyncmsgq, PA_MSGOBJECT(u->sink),SINK_MESSAGE_UPDATE_PARAMETERS, msgqd, 0, NULL);
 
         *response=pa_xstrdup("OK");
