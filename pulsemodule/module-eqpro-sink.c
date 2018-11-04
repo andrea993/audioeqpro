@@ -831,6 +831,7 @@ int pa__init(pa_module*m) {
     char *str=NULL, *fullpath_str=NULL;
     bool isfmin=true, isNbands=true, isoctave=true;
     int ret;
+	 const double invalid = __DBL_MAX__ - 1;
 
     pa_assert(m);
 
@@ -866,42 +867,39 @@ int pa__init(pa_module*m) {
 
 	 /* FIXME pa_modargs_get_value* can't detect whether the user gave an invalid argument to the module or whether the user left the argument blank, I'm working around this using strange values but it is exploitable */
 	 
- _Pragma("GCC diagnostic push")
- _Pragma("GCC diagnostic ignored \"-Wfloat-equal\"")
-	 db=DBL_EPSILON;
+	 db=invalid;
     ret=pa_modargs_get_value_double(ma, "db", &db);
     if (ret < 0) {
         pa_log("db= expects a double argument");
         goto fail;
     }
-	 if (db == DBL_EPSILON)
+	 if (fabs(db - invalid) < DBL_EPSILON)
 		 db=DEFAULT_DB;
 	 if (db <= 0) {
 		 pa_log("db must be positive");
 		 goto fail;
 	 }
 
-	 K=DBL_EPSILON;
+	 K=invalid;
     ret=pa_modargs_get_value_double(ma, "K", &K);
     if (ret < 0) {
         pa_log("K= expects a double argument");
         goto fail;
     }
-	 if (K == DBL_EPSILON)
+	 if (fabs(K - invalid) < DBL_EPSILON)
 		 K = DEFAULT_K;
     if (K<0) {
         pa_log("K= expects a positive double");
         goto fail;
     }
 
-	 fmin = DBL_EPSILON;
+	 fmin = invalid;
     ret=pa_modargs_get_value_double(ma, "fmin", &fmin);
     if (ret < 0) {
         pa_log("fmin= expects a double argument");
         goto fail;
     }
-	 if (fmin == DBL_EPSILON)
-	 {
+	 if (fabs(fmin - invalid) < DBL_EPSILON) {
 		 fmin = DEFAULT_FMIN;
 		 isfmin = false;
 	 }
@@ -910,13 +908,13 @@ int pa__init(pa_module*m) {
         goto fail;
     }
 
-	 octave = DBL_EPSILON;
+	 octave = invalid;
     ret=pa_modargs_get_value_double(ma, "octave", &octave);
     if (ret < 0) {
         pa_log("octave= expects a double argument");
         goto fail;
     }
-	 if (octave == DBL_EPSILON) {
+	 if (fabs(octave - invalid) < DBL_EPSILON) {
 		 octave = DEFAULT_OCT;
 		 isoctave = false;
 	 }
@@ -938,7 +936,6 @@ int pa__init(pa_module*m) {
         pa_log("You can choose up to two arguments between: octave, Nbands, fmin");
         goto fail;
     }
-_Pragma("GCC diagnostic pop") \
 
     calcArgs(isfmin, isNbands, &fmin, &Nbands, &octave, ss.rate/2.0);
 
