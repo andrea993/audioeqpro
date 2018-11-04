@@ -209,9 +209,9 @@ static void eq_preprocessing(equalizerPar *eqp, double SR)
         bw_n=wc_n*(sqrt(eqp->R)-1.0/sqrt(eqp->R))/wcross;
 
         
-		  Tpw=2.0/bw_n*tan(bw_n/2.0*T);
-		  cw=cos(Tpw/2.0*sqrt(4*wc_n*wc_n+1))/cos(Tpw/2.0);
-		  tbw=Tpw*bw_n;
+        Tpw=2.0/bw_n*tan(bw_n/2.0*T);
+        cw=cos(Tpw/2.0*sqrt(4*wc_n*wc_n+1))/cos(Tpw/2.0);
+        tbw=Tpw*bw_n;
         c_m=cos(M_PI*(0.5-0.5/M));
 
         a[0]=4+4*c_m*tbw+tbw*tbw;
@@ -867,70 +867,70 @@ int pa__init(pa_module*m) {
 
 	 /* FIXME pa_modargs_get_value* can't detect whether the user gave an invalid argument to the module or whether the user left the argument blank, I'm working around this using strange values but it is exploitable */
 	 
-	 db=invalid;
+    db=invalid;
     ret=pa_modargs_get_value_double(ma, "db", &db);
     if (ret < 0) {
         pa_log("db= expects a double argument");
         goto fail;
     }
-	 if (fabs(db - invalid) < DBL_EPSILON)
-		 db=DEFAULT_DB;
-	 if (db <= 0) {
-		 pa_log("db must be positive");
-		 goto fail;
-	 }
+    if (fabs(db - invalid) < DBL_EPSILON)
+        db=DEFAULT_DB;
+    if (db <= 0) {
+        pa_log("db must be positive");
+        goto fail;
+    }
 
-	 K=invalid;
+    K=invalid;
     ret=pa_modargs_get_value_double(ma, "K", &K);
     if (ret < 0) {
         pa_log("K= expects a double argument");
         goto fail;
     }
-	 if (fabs(K - invalid) < DBL_EPSILON)
-		 K = DEFAULT_K;
+    if (fabs(K - invalid) < DBL_EPSILON)
+        K = DEFAULT_K;
     if (K<0) {
         pa_log("K= expects a positive double");
         goto fail;
     }
 
-	 fmin = invalid;
+    fmin = invalid;
     ret=pa_modargs_get_value_double(ma, "fmin", &fmin);
     if (ret < 0) {
         pa_log("fmin= expects a double argument");
         goto fail;
     }
-	 if (fabs(fmin - invalid) < DBL_EPSILON) {
-		 fmin = DEFAULT_FMIN;
-		 isfmin = false;
-	 }
+    if (fabs(fmin - invalid) < DBL_EPSILON) {
+        fmin = DEFAULT_FMIN;
+        isfmin = false;
+    }
     if (fmin <= 0 || fmin>=ss.rate/2.0) {
         pa_log("fmin= expects a positive double less than (sampling rate)/2");
         goto fail;
     }
 
-	 octave = invalid;
+    octave = invalid;
     ret=pa_modargs_get_value_double(ma, "octave", &octave);
     if (ret < 0) {
         pa_log("octave= expects a double argument");
         goto fail;
     }
-	 if (fabs(octave - invalid) < DBL_EPSILON) {
-		 octave = DEFAULT_OCT;
-		 isoctave = false;
-	 }
+    if (fabs(octave - invalid) < DBL_EPSILON) {
+        octave = DEFAULT_OCT;
+        isoctave = false;
+    }
     if (octave <= 0) {
         pa_log("octave= expects a positive double");
         goto fail;
     }
 
-	 Nbands = UINT_MAX;
+    Nbands = UINT_MAX;
     ret=pa_modargs_get_value_u32(ma, "Nbands", &Nbands);
     if (ret < 0) {
         pa_log("Nbands= expects an unsigned argument");
         goto fail;
     }
-	 if (Nbands == UINT_MAX)
-		isNbands = false;
+    if (Nbands == UINT_MAX)
+        isNbands = false;
 
     if (isoctave && isNbands && isfmin) {
         pa_log("You can choose up to two arguments between: octave, Nbands, fmin");
