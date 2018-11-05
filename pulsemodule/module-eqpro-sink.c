@@ -15,6 +15,10 @@
 
   You should have received a copy of the GNU Lesser General Public License
   along with PulseAudio; if not, see <http://www.gnu.org/licenses/>.
+  
+  
+  The math model of this equalizer is derived from the Andrea Drius's thesis in Information Engineering:
+  https://github.com/andrea993/audioeqpro/raw/master/Equalizzatore%20grafico%20IIR%20con%20filtri%20Shelving_Last_review.pdf 
  ***/
 
 #ifdef HAVE_CONFIG_H
