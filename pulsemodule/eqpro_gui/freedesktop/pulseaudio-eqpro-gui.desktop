@@ -1,0 +1,6 @@
+[Desktop Entry]
+	Name=eqpro settings
+	Exec=/usr/bin/eqpro-gui
+	Icon=eqpro-icon
+	Type=Application
+	Categories=Audio;
