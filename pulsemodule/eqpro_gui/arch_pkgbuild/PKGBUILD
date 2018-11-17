@@ -1,12 +1,11 @@
 pkgname="eqpro-gui"
-pkgdesc="A qt GUI application to manage the eqpro pulse audio module"
+pkgdesc="A Qt GUI application to manage the eqpro pulse audio module"
 pkgver=v1
 pkgrel=1
 arch=("any")
 license=("GPL")
 depends=("qt5-base" "qt5-quickcontrols")
-makedepends=("git" "wget")
-backup=(etc/pulse/{daemon.conf,default.pa,system.pa,client.conf})
+makedepends=("git")
 provides=("eqpro-gui")
 options=(!emptydirs)
 source=("git+https://github.com/andrea993/audioeqpro.git")
