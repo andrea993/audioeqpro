@@ -25,7 +25,8 @@ optdepends=("alsa-plugins: ALSA support"
             "jack: jack support"
             "lirc-utils: infra-red support"
             "openssl: RAOP support"
-            "python-pyqt4: Equalizer GUI (qpaeq)")
+            "python-pyqt4: Equalizer GUI (qpaeq)"
+            "eqpro-gui")
 backup=(etc/pulse/{daemon.conf,default.pa,system.pa,client.conf})
 provides=("pulseaudio" "libpulse" "pulseaudio-zeroconf" "pulseaudio-gconf" "pulseaudio-equalizer" "pulseaudio-bluetooth" "pulseaudio-jack" "pulseaudio-xen" "pulseaudio-lirc")
 conflicts=("pulseaudio" "libpulse" "pulseaudio-zeroconf" "pulseaudio-gconf" "pulseaudio-equalizer" "pulseaudio-bluetooth" "pulseaudio-jack" "pulseaudio-xen" "pulseaudio-lirc")
