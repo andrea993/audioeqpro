@@ -2,6 +2,7 @@ import QtQuick 2.7
 import QtQuick.Window 2.3
 import QtQuick.Controls 2.0
 import QtQuick.Layouts 1.0
+import Qt.labs.platform 1.0
 
 Window {
     id: mainWindow
@@ -22,6 +23,20 @@ Window {
         anchors.fill: parent
     }
 
+    SystemTrayIcon {
+        visible: true
+        iconSource: "file://usr/share/pixmaps/eqpro-icon.png"
 
-
+        menu: Menu {
+                MenuItem {
+                    text: qsTr("Quit")
+                    onTriggered: Qt.quit()
+                }
+            }
+        onActivated: {
+            mainWindow.show()
+            mainWindow.raise()
+            mainWindow.requestActivate()
+        }
+    }
 }

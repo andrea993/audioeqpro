@@ -1,0 +1,33 @@
+pkgname="eqpro-gui"
+pkgdesc="A Qt GUI application to manage the eqpro pulse audio module"
+pkgver=v1
+pkgrel=1
+arch=("any")
+license=("GPL")
+depends=("qt5-base" "qt5-quickcontrols")
+makedepends=("git")
+provides=("eqpro-gui")
+options=(!emptydirs)
+source=("git+https://github.com/andrea993/audioeqpro.git")
+sha256sums=("SKIP")
+
+pkgver() {
+    echo 1.0
+}
+
+build() {
+    cd "$srcdir/audioeqpro/pulsemodule/eqpro_gui"
+    mkdir gui-build
+    cd gui-build
+    qmake ../eqpro_gui.pro
+    make
+}
+
+package() {
+    cd $pkgdir
+    mkdir -p usr/bin usr/share/pixmaps usr/share/applications
+    mv "$srcdir/audioeqpro/pulsemodule/eqpro_gui/gui-build/eqpro_gui" "usr/bin/eqpro-gui"
+    mv "$srcdir/audioeqpro/pulsemodule/eqpro_gui/freedesktop/eqpro-icon.png" "usr/share/pixmaps/eqpro-icon.png"
+    mv "$srcdir/audioeqpro/pulsemodule/eqpro_gui/freedesktop/pulseaudio-eqpro-gui.desktop" "usr/share/applications/pulseaudio-eqpro-gui.desktop"
+}
+ 
